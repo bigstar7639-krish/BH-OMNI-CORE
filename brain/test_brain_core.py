@@ -10,19 +10,19 @@ def test_brain_core():
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)
 
-        # Create knowledge engine
         knowledge = BHKnowledge(root / "knowledge.json")
 
-        # Add sample knowledge
         knowledge.add(
             "Earth",
             "Earth is the third planet from the Sun."
         )
 
-        # Create brain
-        brain = BlackHoleBrain(knowledge)
+        brain = BlackHoleBrain(
+            knowledge,
+            user_memory_dir=root / "users"
+        )
 
-        # Test user memory
+        # Memory test
         brain.remember_for_user(
             "test_user",
             "My favourite subject is science."
@@ -33,14 +33,40 @@ def test_brain_core():
             keyword="science"
         )
 
-        assert len(memories) > 0, "Memory test failed"
+        assert len(memories) > 0
 
-        # Test predictive engine
+        # Prediction test
         prediction = brain.think_ahead("What is Earth?")
+        assert prediction is not None
 
-        assert prediction is not None, "Prediction test failed"
+        # Answer generation from stored knowledge
+        result = brain.answer_request(
+            "test_user",
+            "What is Earth?"
+        )
 
-        print("BH-OMNI CORE integration test passed!")
+        assert result["status"] == "answered"
+        assert "third planet" in result["answer"]
+        assert result["answer_type"] == "extractive"
+
+        # Unknown question must not invent an answer
+        unknown = brain.answer_request(
+            "test_user",
+            "What is a black hole made of?"
+        )
+
+        assert unknown["status"] == "insufficient_context"
+        assert "don't have enough information" in unknown["answer"]
+
+        # Empty question
+        empty = brain.answer_request("test_user", " ")
+        assert empty["status"] == "error"
+
+        # Invalid user
+        invalid = brain.answer_request(None, "Hello")
+        assert invalid["status"] == "error"
+
+        print("BH-OMNI CORE answer pipeline tests passed!")
 
 
 if __name__ == "__main__":
