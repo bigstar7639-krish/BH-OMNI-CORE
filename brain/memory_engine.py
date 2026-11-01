@@ -9,17 +9,37 @@ class BHMemory:
         self.file_path = Path(file_path)
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        if self.file_path.exists():
+        self.memories = []
+        self.load()
+
+    def load(self):
+        if not self.file_path.exists():
+            self.memories = []
+            return
+
+        try:
             with open(self.file_path, "r", encoding="utf-8") as file:
-                self.memories = json.load(file)
-        else:
+                data = json.load(file)
+
+            self.memories = data if isinstance(data, list) else []
+
+        except (json.JSONDecodeError, OSError):
             self.memories = []
 
-    def remember(self, text, category="general"):
+    def remember(self, text, category="general", memory_type="long_term"):
+        text = str(text).strip()
+
+        if not text:
+            return None
+
         memory = {
-            "id": len(self.memories) + 1,
+            "id": max(
+                (item.get("id", 0) for item in self.memories),
+                default=0
+            ) + 1,
             "text": text,
             "category": category,
+            "memory_type": memory_type,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
 
@@ -28,15 +48,18 @@ class BHMemory:
 
         return memory
 
-    def recall(self, keyword=None, category=None):
+    def recall(self, keyword=None, category=None, memory_type=None):
         results = []
 
         for memory in self.memories:
-            if category and memory["category"] != category:
+            if category and memory.get("category") != category:
+                continue
+
+            if memory_type and memory.get("memory_type", "long_term") != memory_type:
                 continue
 
             if keyword:
-                if keyword.lower() not in memory["text"].lower():
+                if keyword.lower() not in memory.get("text", "").lower():
                     continue
 
             results.append(memory)
@@ -48,7 +71,7 @@ class BHMemory:
 
         self.memories = [
             memory for memory in self.memories
-            if memory["id"] != memory_id
+            if memory.get("id") != memory_id
         ]
 
         if len(self.memories) != old_count:
@@ -56,6 +79,17 @@ class BHMemory:
             return True
 
         return False
+
+    def clear_short_term(self):
+        old_count = len(self.memories)
+
+        self.memories = [
+            memory for memory in self.memories
+            if memory.get("memory_type", "long_term") != "short_term"
+        ]
+
+        if len(self.memories) != old_count:
+            self._save()
 
     def _save(self):
         with open(self.file_path, "w", encoding="utf-8") as file:
@@ -72,8 +106,15 @@ if __name__ == "__main__":
 
     brain.remember(
         "BH-OMNI CORE is my own AI project",
-        "project"
+        "project",
+        "long_term"
     )
 
-    print("Saved memories:")
+    brain.remember(
+        "User is currently testing the brain",
+        "session",
+        "short_term"
+    )
+
+    print("All memories:")
     print(brain.recall())
