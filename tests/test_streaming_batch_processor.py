@@ -9,20 +9,17 @@ class TestStreamingBatchProcessor(unittest.TestCase):
     def setUp(self):
         self.processor = BHMultilingualBatchProcessor(
             max_batch_size=5,
-            max_text_length=100
+            max_text_length=10
         )
 
     def test_returns_generator(self):
         result = self.processor.process_iter(["Hello", "வணக்கம்"])
-
         self.assertTrue(hasattr(result, "__next__"))
 
     def test_stream_results_one_by_one(self):
-        stream = self.processor.process_iter([
-            "Hello",
-            "வணக்கம்",
-            "नमस्ते"
-        ])
+        stream = self.processor.process_iter(
+            ["Hello", "வணக்கம்", "नमस्ते"]
+        )
 
         first = next(stream)
         second = next(stream)
@@ -37,13 +34,9 @@ class TestStreamingBatchProcessor(unittest.TestCase):
         self.assertEqual(third["index"], 2)
 
     def test_stream_handles_invalid_text(self):
-        stream = self.processor.process_iter([
-            "Hello",
-            123,
-            "வணக்கம்"
-        ])
-
-        results = list(stream)
+        results = list(
+            self.processor.process_iter(["Hello", 123, "வணக்கம்"])
+        )
 
         self.assertEqual(len(results), 3)
         self.assertTrue(results[0]["success"])
@@ -51,9 +44,9 @@ class TestStreamingBatchProcessor(unittest.TestCase):
         self.assertTrue(results[2]["success"])
 
     def test_stream_batch_limit(self):
-        stream = self.processor.process_iter([
-            "one", "two", "three", "four", "five", "six"
-        ])
+        stream = self.processor.process_iter(
+            ["one", "two", "three", "four", "five", "six"]
+        )
 
         for _ in range(5):
             next(stream)
@@ -62,17 +55,17 @@ class TestStreamingBatchProcessor(unittest.TestCase):
             next(stream)
 
     def test_stream_text_length_limit(self):
-        results = list(self.processor.process_iter([
-            "Hello",
-            "This text is too long"
-        ]))
+        results = list(
+            self.processor.process_iter(
+                ["Hello", "This text is too long"]
+            )
+        )
 
         self.assertTrue(results[0]["success"])
         self.assertFalse(results[1]["success"])
 
     def test_empty_stream(self):
         results = list(self.processor.process_iter([]))
-
         self.assertEqual(results, [])
 
     def test_invalid_stream_input(self):
@@ -80,10 +73,7 @@ class TestStreamingBatchProcessor(unittest.TestCase):
             self.processor.process_iter("Hello")
 
     def test_batch_compatibility(self):
-        result = self.processor.process_batch([
-            "Hello",
-            "வணக்கம்"
-        ])
+        result = self.processor.process_batch(["Hello", "வணக்கம்"])
 
         self.assertEqual(result["total"], 2)
         self.assertEqual(result["successful"], 2)
