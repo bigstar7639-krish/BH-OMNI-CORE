@@ -1,8 +1,9 @@
 
+from pathlib import Path
 from neural_network import BHNeuralNetwork
 
 
-def train():
+def train_xor(epochs=5000, learning_rate=0.5):
     brain = BHNeuralNetwork(
         input_size=2,
         hidden_size=4,
@@ -16,76 +17,42 @@ def train():
         ([1, 1], [0])
     ]
 
-    learning_rate = 0.5
-    epochs = 10000
-
     for epoch in range(epochs):
-        total_error = 0
+        total_loss = 0.0
 
         for inputs, targets in training_data:
+            loss = brain.train(
+                inputs,
+                targets,
+                learning_rate
+            )
+            total_loss += loss
 
-            hidden = []
-            for j in range(brain.hidden_size):
-                value = brain.bias[j]
+        if (epoch + 1) % 500 == 0:
+            average_loss = total_loss / len(training_data)
 
-                for i in range(brain.input_size):
-                    value += inputs[i] * brain.weights[i][j]
+            print(
+                f"Epoch {epoch + 1}/{epochs} "
+                f"| Loss: {average_loss:.6f}"
+            )
 
-                hidden.append(brain.sigmoid(value))
+    output_path = Path(__file__).parent / "xor_weights.json"
+    brain.save(output_path)
 
-            outputs = brain.forward(inputs)
-
-            output_errors = [
-                targets[k] - outputs[k]
-                for k in range(brain.output_size)
-            ]
-
-            output_deltas = [
-                output_errors[k] * outputs[k] * (1 - outputs[k])
-                for k in range(brain.output_size)
-            ]
-
-            hidden_deltas = []
-
-            for j in range(brain.hidden_size):
-                error = sum(
-                    output_deltas[k] * brain.output_weights[j][k]
-                    for k in range(brain.output_size)
-                )
-
-                hidden_deltas.append(
-                    error * hidden[j] * (1 - hidden[j])
-                )
-
-            for j in range(brain.hidden_size):
-                for k in range(brain.output_size):
-                    brain.output_weights[j][k] += (
-                        learning_rate * hidden[j] * output_deltas[k]
-                    )
-
-            for k in range(brain.output_size):
-                brain.output_bias[k] += learning_rate * output_deltas[k]
-
-            for i in range(brain.input_size):
-                for j in range(brain.hidden_size):
-                    brain.weights[i][j] += (
-                        learning_rate * inputs[i] * hidden_deltas[j]
-                    )
-
-            for j in range(brain.hidden_size):
-                brain.bias[j] += learning_rate * hidden_deltas[j]
-
-            total_error += sum(e * e for e in output_errors)
-
-        if epoch % 1000 == 0:
-            print("Epoch:", epoch, "Error:", total_error)
-
-    brain.save()
-    print("BH-OMNI CORE training completed!")
+    print("\nTraining completed!")
+    print("Final predictions:")
 
     for inputs, targets in training_data:
-        print(inputs, "=>", brain.forward(inputs))
+        prediction = brain.forward(inputs)
+
+        print(
+            f"Input: {inputs} "
+            f"| Expected: {targets} "
+            f"| Predicted: {prediction}"
+        )
+
+    return brain
 
 
 if __name__ == "__main__":
-    train()
+    train_xor()
