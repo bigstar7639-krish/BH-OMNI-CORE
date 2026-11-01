@@ -27,48 +27,50 @@ class BHMultilingualBatchProcessor:
         self.pipeline = BHMultilingualPipeline()
 
     def process_iter(self, texts):
-        """Yield individual results without storing the entire batch."""
+        """Validate input immediately and return a lazy generator."""
 
         if isinstance(texts, (str, bytes)) or not isinstance(texts, Iterable):
             raise TypeError("Texts must be an iterable of strings")
 
-        for index, text in enumerate(texts):
-            if index >= self.max_batch_size:
-                raise ValueError(
-                    f"Batch exceeds maximum size of {self.max_batch_size}"
-                )
-
-            try:
-                if not isinstance(text, str):
-                    raise TypeError("Text must be a string")
-
-                if len(text) > self.max_text_length:
+        def generate():
+            for index, text in enumerate(texts):
+                if index >= self.max_batch_size:
                     raise ValueError(
-                        f"Text exceeds maximum length of {self.max_text_length}"
+                        f"Batch exceeds maximum size of {self.max_batch_size}"
                     )
 
-                result = self.pipeline.process(text)
+                try:
+                    if not isinstance(text, str):
+                        raise TypeError("Text must be a string")
 
-                yield {
-                    "index": index,
-                    "success": True,
-                    "result": result,
-                    "error": None,
-                }
+                    if len(text) > self.max_text_length:
+                        raise ValueError(
+                            f"Text exceeds maximum length of {self.max_text_length}"
+                        )
 
-            except (TypeError, ValueError) as error:
-                yield {
-                    "index": index,
-                    "success": False,
-                    "result": None,
-                    "error": str(error),
-                }
+                    result = self.pipeline.process(text)
+
+                    yield {
+                        "index": index,
+                        "success": True,
+                        "result": result,
+                        "error": None,
+                    }
+
+                except (TypeError, ValueError) as error:
+                    yield {
+                        "index": index,
+                        "success": False,
+                        "result": None,
+                        "error": str(error),
+                    }
+
+        return generate()
 
     def process_batch(self, texts):
-        """Compatibility method that returns a complete batch report."""
+        """Return a complete batch report."""
 
         results = list(self.process_iter(texts))
-
         successful = sum(1 for item in results if item["success"])
 
         return {
