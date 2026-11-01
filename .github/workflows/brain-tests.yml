@@ -21,4 +21,7 @@ jobs:
           python-version: "3.11"
 
       - name: Run brain tests
-        run: python -m brain.test_brain
+        run: |
+          python -m brain.test_brain
+          python -m brain.test_brain_core
+          python -m brain.health_check
