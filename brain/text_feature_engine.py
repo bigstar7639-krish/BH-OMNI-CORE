@@ -1,4 +1,3 @@
-
 import math
 from brain.tokenizer import BHTokenizer
 
@@ -14,9 +13,8 @@ class BHTextFeatureEngine:
         if not isinstance(text, str) or not text.strip():
             return [0.0, 0.0, 0.0, 0.0]
 
-        # Convert text into tokens
-        self.tokenizer.learn(text)
-        tokens = self.tokenizer.encode(text)
+        # Tokenize without learning new vocabulary
+        tokens = self.tokenizer.tokenize(text)
 
         if not tokens:
             return [0.0, 0.0, 0.0, 0.0]
@@ -30,7 +28,10 @@ class BHTextFeatureEngine:
         )
 
         average = min(
-            sum(tokens) / (len(tokens) * 100),
+            sum(
+                self.tokenizer.vocab.get(token, 0)
+                for token in tokens
+            ) / (len(tokens) * 100),
             1.0
         )
 
