@@ -1,3 +1,4 @@
+
 name: BH-OMNI CORE Brain Tests
 
 on:
@@ -20,14 +21,20 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Verify Python version
+        run: python --version
+
+      - name: Check Python syntax
+        run: python -m compileall -q brain tests
+
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
 
+      - name: Run brain core tests
+        run: python -m unittest brain.test_brain_core -v
+
       - name: Run basic brain tests
         run: python -m brain.test_brain
-
-      - name: Run brain core integration tests
-        run: python -m brain.test_brain_core
 
       - name: Run health check
         run: python -m brain.health_check
