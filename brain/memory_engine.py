@@ -49,7 +49,11 @@ class BHMemory:
 
     def _next_id(self):
         return max(
-            (item.get("id", 0) for item in self.memories),
+            (
+                item.get("id", 0)
+                for item in self.memories
+                if isinstance(item.get("id", 0), int)
+            ),
             default=0
         ) + 1
 
@@ -70,7 +74,6 @@ class BHMemory:
 
         importance = max(1, min(10, int(importance)))
 
-        # Avoid exact duplicate memories
         for memory in self.memories:
             if (
                 memory.get("text", "").casefold() == text.casefold()
@@ -82,7 +85,10 @@ class BHMemory:
                     importance
                 )
                 memory["last_accessed"] = self._now()
-                memory["access_count"] = memory.get("access_count", 0) + 1
+                memory["access_count"] = (
+                    memory.get("access_count", 0) + 1
+                )
+
                 self._save()
                 return memory
 
@@ -112,8 +118,9 @@ class BHMemory:
         limit=None
     ):
         results = []
+
         query_words = (
-            set(re.findall(r"\w+", keyword.casefold()))
+            set(re.findall(r"\w+", str(keyword).casefold()))
             if keyword else set()
         )
 
@@ -135,7 +142,10 @@ class BHMemory:
 
             if query_words:
                 text_words = set(
-                    re.findall(r"\w+", memory.get("text", "").casefold())
+                    re.findall(
+                        r"\w+",
+                        memory.get("text", "").casefold()
+                    )
                 )
 
                 if not query_words.intersection(text_words):
@@ -151,16 +161,17 @@ class BHMemory:
             reverse=True
         )
 
-        # Record that returned memories were accessed
+        if limit is not None:
+            results = results[:max(0, int(limit))]
+
         for memory in results:
-            memory["access_count"] = memory.get("access_count", 0) + 1
+            memory["access_count"] = (
+                memory.get("access_count", 0) + 1
+            )
             memory["last_accessed"] = self._now()
 
         if results:
             self._save()
-
-        if limit is not None:
-            results = results[:max(0, limit)]
 
         return results
 
@@ -179,6 +190,7 @@ class BHMemory:
             if text is not None:
                 if not str(text).strip():
                     return None
+
                 memory["text"] = str(text).strip()
 
             if category is not None:
@@ -187,6 +199,7 @@ class BHMemory:
             if memory_type is not None:
                 if memory_type not in ("short_term", "long_term"):
                     raise ValueError("Invalid memory type")
+
                 memory["memory_type"] = memory_type
 
             if importance is not None:
@@ -196,6 +209,7 @@ class BHMemory:
 
             memory["updated_at"] = self._now()
             self._save()
+
             return memory
 
         return None
@@ -246,6 +260,7 @@ class BHMemory:
 
 
 if __name__ == "__main__":
+
     brain = BHMemory()
 
     brain.remember(
