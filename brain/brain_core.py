@@ -1,9 +1,11 @@
+
 from pathlib import Path
 import hashlib
 
 from brain.network_manager import BHNetworkManager
 from brain.predictive_engine import PredictiveEngine
 from brain.memory_engine import BHMemory
+from brain.text_network import BHTextNetwork
 
 
 class BlackHoleBrain:
@@ -13,12 +15,23 @@ class BlackHoleBrain:
         # Shared knowledge
         self.knowledge_engine = knowledge_engine
 
-        # Specialist network manager
+        # Network manager
         self.network_manager = BHNetworkManager()
 
         # Prediction engine
         self.predictive_engine = PredictiveEngine(
             knowledge_engine
+        )
+
+        # Text processing and neural network
+        self.text_network = BHTextNetwork()
+
+        # Automatically register text neural network
+        self.network_manager.register(
+            name="text",
+            network=self.text_network.network,
+            description="Text processing neural network",
+            priority=10
         )
 
         # Separate memory for each user
@@ -55,7 +68,7 @@ class BlackHoleBrain:
 
         return self.user_memories[user_id]
 
-    # Register a specialist network
+    # Register another specialist network
     def register_network(
         self,
         name,
@@ -70,28 +83,48 @@ class BlackHoleBrain:
             priority
         )
 
-    # Activate network
     def activate_network(self, name):
         return self.network_manager.activate(name)
 
-    # Deactivate network
     def deactivate_network(self, name):
         return self.network_manager.deactivate(name)
 
-    # Remove network
     def remove_network(self, name):
         return self.network_manager.remove(name)
 
-    # View registered networks
     def get_network_status(self):
         return self.network_manager.list_networks()
 
-    # Connect specialist networks
     def connect_networks(self, source, target):
         return self.network_manager.connect(
             source,
             target
         )
+
+    def disconnect_networks(self, source, target):
+        return self.network_manager.disconnect(
+            source,
+            target
+        )
+
+    # Train the text neural network
+    def train_text_network(
+        self,
+        text,
+        targets,
+        learning_rate=0.5
+    ):
+        return self.text_network.train_text(
+            text,
+            targets,
+            learning_rate
+        )
+
+    # Save text network weights
+    def save_text_network(self):
+        self.text_network.save()
+
+        return True
 
     # Prepare prediction while typing
     def think_ahead(self, typed_text):
@@ -176,14 +209,29 @@ class BlackHoleBrain:
             keyword=question
         )
 
-        # Run specialist networks only when
-        # correctly formatted numeric inputs are supplied.
+        # Run text network using converted features
         network_results = {}
 
         if network_inputs is not None:
+
             network_results = (
                 self.network_manager.run_active_networks(
                     network_inputs
+                )
+            )
+
+        elif "text" in self.network_manager.networks:
+
+            features = (
+                self.text_network.feature_engine.text_to_features(
+                    question
+                )
+            )
+
+            network_results["text"] = (
+                self.network_manager.run_network(
+                    "text",
+                    features
                 )
             )
 
