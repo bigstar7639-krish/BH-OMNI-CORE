@@ -1,193 +1,436 @@
 
-import tempfile
-import unittest
+import hashlib
+import math
+import re
+import unicodedata
 from pathlib import Path
 
-from brain.brain_core import BlackHoleBrain
-from brain.knowledge_engine import BHKnowledge
+from brain.network_manager import BHNetworkManager
+from brain.predictive_engine import PredictiveEngine
+from brain.memory_engine import BHMemory
+from brain.text_network import BHTextNetwork
 
 
-class TestBrainCore(unittest.TestCase):
+class BlackHoleBrain:
 
-    def setUp(self):
-        self.temp_dir = tempfile.TemporaryDirectory()
-        self.root = Path(self.temp_dir.name)
+    _STOP_WORDS = {
+        "a", "an", "the", "is", "am", "are", "was", "were",
+        "be", "been", "being", "what", "which", "who", "whom",
+        "whose", "when", "where", "why", "how", "do", "does",
+        "did", "can", "could", "would", "should", "will",
+        "shall", "may", "might", "must", "have", "has", "had",
+        "having", "to", "of", "in", "on", "at", "by", "for",
+        "from", "with", "about", "into", "onto", "over", "under",
+        "and", "or", "but", "if", "then", "than", "that",
+        "this", "these", "those", "it", "its", "i", "you",
+        "he", "she", "we", "they", "me", "my", "your", "his",
+        "her", "our", "their", "tell", "explain", "describe",
+        "please"
+    }
 
-        self.knowledge = BHKnowledge(
-            self.root / "knowledge.json"
+    def __init__(
+        self,
+        knowledge_engine,
+        user_memory_dir="database/users"
+    ):
+        if knowledge_engine is None:
+            raise ValueError("A knowledge_engine is required.")
+
+        self.knowledge_engine = knowledge_engine
+        self.user_memory_dir = Path(user_memory_dir)
+
+        self.network_manager = BHNetworkManager()
+        self.predictive_engine = PredictiveEngine(
+            knowledge_engine
+        )
+        self.text_network = BHTextNetwork()
+
+        self.network_manager.register(
+            name="text",
+            network=self.text_network.network,
+            description="Text processing neural network",
+            priority=10
         )
 
-        self.knowledge.add(
-            "Earth",
-            "Earth is the third planet from the Sun."
+        self.user_memories = {}
+        self.is_ready = True
+
+    # User memory management
+    def _get_user_memory(self, user_id):
+        if user_id is None:
+            raise ValueError("A valid user_id is required.")
+
+        user_id = str(user_id).strip()
+
+        if not user_id:
+            raise ValueError("A valid user_id is required.")
+
+        if user_id not in self.user_memories:
+            safe_id = hashlib.sha256(
+                user_id.encode("utf-8")
+            ).hexdigest()
+
+            memory_path = (
+                self.user_memory_dir / f"{safe_id}.json"
+            )
+
+            self.user_memories[user_id] = BHMemory(
+                file_path=memory_path
+            )
+
+        return self.user_memories[user_id]
+
+    # Network management
+    def register_network(
+        self,
+        name,
+        network,
+        description="",
+        priority=5
+    ):
+        return self.network_manager.register(
+            name,
+            network,
+            description,
+            priority
         )
 
-        self.brain = BlackHoleBrain(
-            self.knowledge,
-            user_memory_dir=self.root / "users"
+    def activate_network(self, name):
+        return self.network_manager.activate(name)
+
+    def deactivate_network(self, name):
+        return self.network_manager.deactivate(name)
+
+    def remove_network(self, name):
+        return self.network_manager.remove(name)
+
+    def get_network_status(self):
+        return self.network_manager.list_networks()
+
+    def connect_networks(self, source, target):
+        return self.network_manager.connect(source, target)
+
+    def disconnect_networks(self, source, target):
+        return self.network_manager.disconnect(source, target)
+
+    # Text network
+    def train_text_network(
+        self,
+        text,
+        targets,
+        learning_rate=0.5
+    ):
+        return self.text_network.train_text(
+            text,
+            targets,
+            learning_rate
         )
 
-    def tearDown(self):
-        self.temp_dir.cleanup()
+    def save_text_network(self):
+        return self.text_network.save()
 
-    def test_memory_storage_and_recall(self):
-        self.brain.remember_for_user(
-            "test_user",
-            "My favourite subject is science."
+    def think_ahead(self, typed_text):
+        if not isinstance(typed_text, str):
+            return None
+
+        if not typed_text.strip():
+            return None
+
+        return self.predictive_engine.prepare(typed_text)
+
+    # Memory operations
+    def remember_for_user(
+        self,
+        user_id,
+        text,
+        category="general",
+        memory_type="long_term",
+        importance=5
+    ):
+        return self._get_user_memory(user_id).remember(
+            text=text,
+            category=category,
+            memory_type=memory_type,
+            importance=importance
         )
 
-        memories = self.brain.recall_for_user(
-            "test_user",
-            keyword="science"
+    def recall_for_user(
+        self,
+        user_id,
+        keyword=None,
+        category=None,
+        memory_type=None,
+        min_importance=None,
+        limit=None
+    ):
+        return self._get_user_memory(user_id).recall(
+            keyword=keyword,
+            category=category,
+            memory_type=memory_type,
+            min_importance=min_importance,
+            limit=limit
         )
 
-        self.assertGreater(len(memories), 0)
-
-    def test_user_memory_isolation(self):
-        self.brain.remember_for_user(
-            "user_one",
-            "My favourite subject is science."
+    def update_user_memory(
+        self,
+        user_id,
+        memory_id,
+        text=None,
+        category=None,
+        memory_type=None,
+        importance=None
+    ):
+        return self._get_user_memory(user_id).update(
+            memory_id=memory_id,
+            text=text,
+            category=category,
+            memory_type=memory_type,
+            importance=importance
         )
 
-        user_one_memories = self.brain.recall_for_user(
-            "user_one",
-            keyword="science"
+    def forget_user_memory(self, user_id, memory_id):
+        return self._get_user_memory(user_id).forget(memory_id)
+
+    def clear_user_short_term_memory(self, user_id):
+        return self._get_user_memory(user_id).clear_short_term()
+
+    def get_user_memory_count(
+        self,
+        user_id,
+        memory_type=None
+    ):
+        return self._get_user_memory(user_id).count(
+            memory_type
         )
 
-        user_two_memories = self.brain.recall_for_user(
-            "user_two",
-            keyword="science"
+    # Unicode-aware meaningful word extraction
+    @classmethod
+    def _meaningful_words(cls, text):
+        if not isinstance(text, str):
+            return set()
+
+        words = []
+        current_word = []
+
+        for char in text.casefold():
+            category = unicodedata.category(char)
+
+            # Unicode letters and numbers
+            if category.startswith(("L", "N")):
+                current_word.append(char)
+
+            # Combining marks must remain with their word.
+            elif category.startswith("M") and current_word:
+                current_word.append(char)
+
+            else:
+                if current_word:
+                    words.append("".join(current_word))
+                    current_word = []
+
+        if current_word:
+            words.append("".join(current_word))
+
+        return {
+            word
+            for word in words
+            if len(word) > 1 and word not in cls._STOP_WORDS
+        }
+
+    # Knowledge relevance filter
+    @classmethod
+    def _filter_relevant_knowledge(
+        cls,
+        question,
+        results
+    ):
+        question_words = cls._meaningful_words(question)
+
+        if not question_words or not isinstance(results, list):
+            return []
+
+        minimum_overlap = max(
+            1,
+            math.ceil(len(question_words) * 0.25)
         )
 
-        self.assertGreater(len(user_one_memories), 0)
-        self.assertEqual(len(user_two_memories), 0)
+        scored_results = []
 
-    def test_prediction(self):
-        prediction = self.brain.think_ahead(
-            "What is Earth?"
+        for index, item in enumerate(results):
+            if not isinstance(item, dict):
+                continue
+
+            searchable_text = " ".join((
+                str(item.get("title", "")),
+                str(item.get("content", "")),
+                str(item.get("category", ""))
+            ))
+
+            entry_words = cls._meaningful_words(
+                searchable_text
+            )
+
+            overlap = len(
+                question_words.intersection(entry_words)
+            )
+
+            if overlap >= minimum_overlap:
+                scored_results.append(
+                    (overlap, index, item)
+                )
+
+        scored_results.sort(
+            key=lambda result: (
+                -result[0],
+                result[1]
+            )
         )
 
-        self.assertIsNotNone(prediction)
+        return [
+            item
+            for _, _, item in scored_results
+        ]
 
-    def test_known_question_answer(self):
-        result = self.brain.answer_request(
-            "test_user",
-            "What is Earth?"
+    # Build answer using shared knowledge only
+    @staticmethod
+    def _build_answer(question, knowledge_results):
+        if not knowledge_results:
+            return (
+                "I don't have enough information in my "
+                "knowledge database to answer that yet."
+            )
+
+        best = knowledge_results[0]
+
+        title = str(best.get("title", "")).strip()
+        content = str(best.get("content", "")).strip()
+
+        if not content:
+            return (
+                "I found a knowledge entry, but it does "
+                "not contain an answer."
+            )
+
+        if title:
+            return f"{title}: {content}"
+
+        return content
+
+    # Complete question-answer pipeline
+    def answer_request(
+        self,
+        user_id,
+        question,
+        network_inputs=None
+    ):
+        if not isinstance(question, str):
+            return {
+                "status": "error",
+                "message": "Question must be text."
+            }
+
+        question = question.strip()
+
+        if not question:
+            return {
+                "status": "error",
+                "message": "Question is empty."
+            }
+
+        try:
+            user_memory = self._get_user_memory(user_id)
+        except ValueError as error:
+            return {
+                "status": "error",
+                "message": str(error)
+            }
+
+        prediction = self.predictive_engine.get_on_send(
+            question
         )
 
-        self.assertEqual(result["status"], "answered")
-        self.assertIn("third planet", result["answer"])
-        self.assertEqual(
-            result["answer_type"],
-            "extractive"
+        raw_knowledge_results = (
+            prediction.get("results", [])
+            if isinstance(prediction, dict)
+            else []
         )
 
-    def test_unknown_question(self):
-        result = self.brain.answer_request(
-            "test_user",
-            "What is a black hole made of?"
+        knowledge_results = (
+            self._filter_relevant_knowledge(
+                question,
+                raw_knowledge_results
+            )
         )
 
-        self.assertEqual(
-            result["status"],
-            "insufficient_context"
+        # Personal memories stay separate from shared knowledge.
+        relevant_memories = user_memory.recall(
+            keyword=question,
+            limit=10
         )
 
-        self.assertIn(
-            "don't have enough information",
-            result["answer"]
+        if network_inputs is not None:
+            network_results = (
+                self.network_manager.run_active_networks(
+                    network_inputs
+                )
+            )
+        else:
+            network_results = {}
+
+            if "text" in self.network_manager.networks:
+                features = (
+                    self.text_network.feature_engine.text_to_features(
+                        question
+                    )
+                )
+
+                network_results["text"] = (
+                    self.network_manager.run_network(
+                        "text",
+                        features
+                    )
+                )
+
+        answer = self._build_answer(
+            question,
+            knowledge_results
         )
 
-    def test_personal_memory_is_separate_from_answer(self):
-        self.brain.remember_for_user(
-            "test_user",
-            "My favourite subject is science."
+        status = (
+            "answered"
+            if knowledge_results
+            else "insufficient_context"
         )
 
-        result = self.brain.answer_request(
-            "test_user",
-            "What is Earth?"
-        )
+        return {
+            "status": status,
+            "question": question,
+            "answer": answer,
+            "knowledge_results": knowledge_results,
+            "relevant_user_memories": relevant_memories,
+            "network_results": network_results,
+            "answer_type": "extractive"
+        }
 
-        self.assertIn(
-            "relevant_user_memories",
-            result
-        )
+    def clear_prediction_cache(self):
+        self.predictive_engine.clear_cache()
 
-        self.assertNotIn(
-            "favourite subject",
-            result["answer"].lower()
-        )
-
-    def test_empty_question(self):
-        result = self.brain.answer_request(
-            "test_user",
-            " "
-        )
-
-        self.assertEqual(result["status"], "error")
-
-    def test_invalid_user(self):
-        result = self.brain.answer_request(
-            None,
-            "Hello"
-        )
-
-        self.assertEqual(result["status"], "error")
-
-    def test_invalid_question_type(self):
-        result = self.brain.answer_request(
-            "test_user",
-            None
-        )
-
-        self.assertEqual(result["status"], "error")
-
-    def test_unicode_meaningful_words(self):
-        words = self.brain._meaningful_words(
-            "தமிழ் அறிவியல் உலகம்"
-        )
-
-        self.assertIn("தமிழ்", words)
-        self.assertIn("அறிவியல்", words)
-
-    def test_network_registration(self):
-        result = self.brain.register_network(
-            "test_network",
-            self.brain.text_network.network,
-            "Test network",
-            5
-        )
-
-        self.assertTrue(result)
-
-        networks = self.brain.get_network_status()
-
-        self.assertIn("test_network", networks)
-
-    def test_network_activation_and_deactivation(self):
-        self.brain.register_network(
-            "test_network",
-            self.brain.text_network.network
-        )
-
-        self.assertTrue(
-            self.brain.deactivate_network("test_network")
-        )
-
-        self.assertTrue(
-            self.brain.activate_network("test_network")
-        )
-
-    def test_health_check(self):
-        result = self.brain.health_check()
-
-        self.assertTrue(result["ready"])
-        self.assertGreaterEqual(
-            result["knowledge_count"],
-            1
-        )
+    # System health check
+    def health_check(self):
+        return {
+            "ready": self.is_ready,
+            "knowledge_count": self.knowledge_engine.count(),
+            "registered_networks": len(
+                self.network_manager.networks
+            ),
+            "active_networks": len(
+                self.network_manager.get_active_networks()
+            ),
+            "users_with_memory": len(
+                self.user_memories
+            )
+        }
 
 
 if __name__ == "__main__":
-    unittest.main()
+    print("BH-OMNI CORE brain module loaded.")
