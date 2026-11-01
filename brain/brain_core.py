@@ -10,16 +10,19 @@ from brain.text_network import BHTextNetwork
 
 class BlackHoleBrain:
 
-    def __init__(self, knowledge_engine):
+    def __init__(
+        self,
+        knowledge_engine,
+        user_memory_dir="database/users"
+    ):
+        if knowledge_engine is None:
+            raise ValueError("A knowledge_engine is required.")
 
         self.knowledge_engine = knowledge_engine
+        self.user_memory_dir = Path(user_memory_dir)
 
         self.network_manager = BHNetworkManager()
-
-        self.predictive_engine = PredictiveEngine(
-            knowledge_engine
-        )
-
+        self.predictive_engine = PredictiveEngine(knowledge_engine)
         self.text_network = BHTextNetwork()
 
         self.network_manager.register(
@@ -30,12 +33,10 @@ class BlackHoleBrain:
         )
 
         self.user_memories = {}
-
         self.is_ready = True
 
-    # Get or create isolated user memory
+    # User memory management
     def _get_user_memory(self, user_id):
-
         if user_id is None:
             raise ValueError("A valid user_id is required.")
 
@@ -45,16 +46,11 @@ class BlackHoleBrain:
             raise ValueError("A valid user_id is required.")
 
         if user_id not in self.user_memories:
-
             safe_id = hashlib.sha256(
                 user_id.encode("utf-8")
             ).hexdigest()
 
-            memory_path = (
-                Path("database")
-                / "users"
-                / f"{safe_id}.json"
-            )
+            memory_path = self.user_memory_dir / f"{safe_id}.json"
 
             self.user_memories[user_id] = BHMemory(
                 file_path=memory_path
@@ -64,17 +60,10 @@ class BlackHoleBrain:
 
     # Network management
     def register_network(
-        self,
-        name,
-        network,
-        description="",
-        priority=5
+        self, name, network, description="", priority=5
     ):
         return self.network_manager.register(
-            name,
-            network,
-            description,
-            priority
+            name, network, description, priority
         )
 
     def activate_network(self, name):
@@ -95,27 +84,19 @@ class BlackHoleBrain:
     def disconnect_networks(self, source, target):
         return self.network_manager.disconnect(source, target)
 
-    # Train text neural network
+    # Text network
     def train_text_network(
-        self,
-        text,
-        targets,
-        learning_rate=0.5
+        self, text, targets, learning_rate=0.5
     ):
         return self.text_network.train_text(
-            text,
-            targets,
-            learning_rate
+            text, targets, learning_rate
         )
 
-    # Save neural network weights
     def save_text_network(self):
         self.text_network.save()
         return True
 
-    # Prediction while typing
     def think_ahead(self, typed_text):
-
         if not isinstance(typed_text, str):
             return None
 
@@ -124,7 +105,7 @@ class BlackHoleBrain:
 
         return self.predictive_engine.prepare(typed_text)
 
-    # Store user memory
+    # Memory operations
     def remember_for_user(
         self,
         user_id,
@@ -133,17 +114,13 @@ class BlackHoleBrain:
         memory_type="long_term",
         importance=5
     ):
-
-        memory = self._get_user_memory(user_id)
-
-        return memory.remember(
+        return self._get_user_memory(user_id).remember(
             text=text,
             category=category,
             memory_type=memory_type,
             importance=importance
         )
 
-    # Retrieve user memories
     def recall_for_user(
         self,
         user_id,
@@ -153,10 +130,7 @@ class BlackHoleBrain:
         min_importance=None,
         limit=None
     ):
-
-        memory = self._get_user_memory(user_id)
-
-        return memory.recall(
+        return self._get_user_memory(user_id).recall(
             keyword=keyword,
             category=category,
             memory_type=memory_type,
@@ -164,7 +138,6 @@ class BlackHoleBrain:
             limit=limit
         )
 
-    # Update existing memory
     def update_user_memory(
         self,
         user_id,
@@ -174,10 +147,7 @@ class BlackHoleBrain:
         memory_type=None,
         importance=None
     ):
-
-        memory = self._get_user_memory(user_id)
-
-        return memory.update(
+        return self._get_user_memory(user_id).update(
             memory_id=memory_id,
             text=text,
             category=category,
@@ -185,39 +155,48 @@ class BlackHoleBrain:
             importance=importance
         )
 
-    # Forget a memory
     def forget_user_memory(self, user_id, memory_id):
+        return self._get_user_memory(user_id).forget(memory_id)
 
-        memory = self._get_user_memory(user_id)
-
-        return memory.forget(memory_id)
-
-    # Clear short-term memories
     def clear_user_short_term_memory(self, user_id):
+        return self._get_user_memory(user_id).clear_short_term()
 
-        memory = self._get_user_memory(user_id)
+    def get_user_memory_count(self, user_id, memory_type=None):
+        return self._get_user_memory(user_id).count(memory_type)
 
-        return memory.clear_short_term()
+    # Build an answer from retrieved knowledge.
+    # This is extractive, not generative AI.
+    @staticmethod
+    def _build_answer(question, knowledge_results):
+        if not knowledge_results:
+            return (
+                "I don't have enough information in my "
+                "knowledge database to answer that yet."
+            )
 
-    # Count user memories
-    def get_user_memory_count(
-        self,
-        user_id,
-        memory_type=None
-    ):
+        best = knowledge_results[0]
 
-        memory = self._get_user_memory(user_id)
+        title = str(best.get("title", "")).strip()
+        content = str(best.get("content", "")).strip()
 
-        return memory.count(memory_type)
+        if not content:
+            return (
+                "I found a knowledge entry, but it does "
+                "not contain an answer."
+            )
 
-    # Process a user question
+        if title:
+            return f"{title}: {content}"
+
+        return content
+
+    # Complete question-answer pipeline
     def answer_request(
         self,
         user_id,
         question,
         network_inputs=None
     ):
-
         if not isinstance(question, str):
             return {
                 "status": "error",
@@ -232,65 +211,81 @@ class BlackHoleBrain:
                 "message": "Question is empty."
             }
 
-        # Search shared knowledge
-        result = self.predictive_engine.get_on_send(
+        try:
+            user_memory = self._get_user_memory(user_id)
+        except ValueError as error:
+            return {
+                "status": "error",
+                "message": str(error)
+            }
+
+        # Retrieve shared knowledge
+        prediction = self.predictive_engine.get_on_send(
             question
         )
 
-        # Retrieve this user's isolated memory
-        user_memory = self._get_user_memory(user_id)
-
         knowledge_results = (
-            result["results"]
-            if result else []
+            prediction.get("results", [])
+            if isinstance(prediction, dict)
+            else []
         )
 
+        # Retrieve this user's memories
         relevant_memories = user_memory.recall(
             keyword=question,
             limit=10
         )
 
-        # Run neural networks
-        network_results = {}
-
+        # Run registered neural networks
         if network_inputs is not None:
-
             network_results = (
                 self.network_manager.run_active_networks(
                     network_inputs
                 )
             )
+        else:
+            network_results = {}
 
-        elif "text" in self.network_manager.networks:
-
-            features = (
-                self.text_network.feature_engine.text_to_features(
-                    question
+            if "text" in self.network_manager.networks:
+                features = (
+                    self.text_network.feature_engine.text_to_features(
+                        question
+                    )
                 )
-            )
 
-            network_results["text"] = (
-                self.network_manager.run_network(
-                    "text",
-                    features
+                network_results["text"] = (
+                    self.network_manager.run_network(
+                        "text",
+                        features
+                    )
                 )
-            )
+
+        # Compose a grounded response
+        answer = self._build_answer(
+            question,
+            knowledge_results
+        )
+
+        status = (
+            "answered"
+            if knowledge_results
+            else "insufficient_context"
+        )
 
         return {
-            "status": "retrieved",
+            "status": status,
             "question": question,
+            "answer": answer,
             "knowledge_results": knowledge_results,
             "relevant_user_memories": relevant_memories,
-            "network_results": network_results
+            "network_results": network_results,
+            "answer_type": "extractive"
         }
 
-    # Clear prediction cache
     def clear_prediction_cache(self):
         self.predictive_engine.clear_cache()
 
-    # Brain health status
     def health_check(self):
-
         return {
             "ready": self.is_ready,
             "knowledge_count": self.knowledge_engine.count(),
