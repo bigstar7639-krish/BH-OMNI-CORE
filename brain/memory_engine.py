@@ -1,11 +1,13 @@
-
 import json
 import re
+from copy import deepcopy
 from pathlib import Path
 from datetime import datetime, timezone
 
 
 class BHMemory:
+
+    VALID_MEMORY_TYPES = ("short_term", "long_term")
 
     def __init__(self, file_path="database/memories.json"):
         self.file_path = Path(file_path)
@@ -19,43 +21,89 @@ class BHMemory:
     def load(self):
         if not self.file_path.exists():
             self.memories = []
-            return
+            return True
 
         try:
             with open(self.file_path, "r", encoding="utf-8") as file:
                 data = json.load(file)
 
-            self.memories = data if isinstance(data, list) else []
+        except json.JSONDecodeError as error:
+            raise ValueError(
+                f"Memory database contains invalid JSON: {error}"
+            ) from error
 
-        except (json.JSONDecodeError, OSError):
-            self.memories = []
+        except OSError as error:
+            raise OSError(
+                f"Could not read memory database: {error}"
+            ) from error
+
+        if not isinstance(data, list):
+            raise ValueError("Memory database must contain a JSON list.")
+
+        validated = []
+
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+
+            if "id" not in item or "text" not in item:
+                continue
+
+            if not isinstance(item["text"], str):
+                continue
+
+            validated.append(item)
+
+        self.memories = validated
+        return True
 
     def _save(self):
-        self.file_path.parent.mkdir(parents=True, exist_ok=True)
+        self.file_path.parent.mkdir(
+            parents=True,
+            exist_ok=True
+        )
 
         temp_path = self.file_path.with_suffix(
             self.file_path.suffix + ".tmp"
         )
 
-        with open(temp_path, "w", encoding="utf-8") as file:
-            json.dump(
-                self.memories,
-                file,
-                ensure_ascii=False,
-                indent=2
-            )
+        try:
+            with open(temp_path, "w", encoding="utf-8") as file:
+                json.dump(
+                    self.memories,
+                    file,
+                    ensure_ascii=False,
+                    indent=2
+                )
 
-        temp_path.replace(self.file_path)
+            temp_path.replace(self.file_path)
+
+        except OSError:
+            if temp_path.exists():
+                temp_path.unlink()
+            raise
+
+        return True
 
     def _next_id(self):
-        return max(
-            (
-                item.get("id", 0)
-                for item in self.memories
-                if isinstance(item.get("id", 0), int)
-            ),
-            default=0
-        ) + 1
+        valid_ids = [
+            item["id"]
+            for item in self.memories
+            if isinstance(item.get("id"), int)
+            and not isinstance(item.get("id"), bool)
+        ]
+
+        return max(valid_ids, default=0) + 1
+
+    @staticmethod
+    def _validate_memory_type(memory_type):
+        if memory_type not in BHMemory.VALID_MEMORY_TYPES:
+            raise ValueError("Invalid memory type")
+
+    @staticmethod
+    def _validate_importance(importance):
+        importance = int(importance)
+        return max(1, min(10, importance))
 
     def remember(
         self,
@@ -64,15 +112,16 @@ class BHMemory:
         memory_type="long_term",
         importance=5
     ):
-        text = str(text).strip()
+        if not isinstance(text, str):
+            raise TypeError("Memory text must be a string.")
+
+        text = text.strip()
 
         if not text:
             return None
 
-        if memory_type not in ("short_term", "long_term"):
-            raise ValueError("Invalid memory type")
-
-        importance = max(1, min(10, int(importance)))
+        self._validate_memory_type(memory_type)
+        importance = self._validate_importance(importance)
 
         for memory in self.memories:
             if (
@@ -84,13 +133,14 @@ class BHMemory:
                     memory.get("importance", 5),
                     importance
                 )
+
                 memory["last_accessed"] = self._now()
                 memory["access_count"] = (
                     memory.get("access_count", 0) + 1
                 )
 
                 self._save()
-                return memory
+                return deepcopy(memory)
 
         memory = {
             "id": self._next_id(),
@@ -107,7 +157,7 @@ class BHMemory:
         self.memories.append(memory)
         self._save()
 
-        return memory
+        return deepcopy(memory)
 
     def recall(
         self,
@@ -117,22 +167,31 @@ class BHMemory:
         min_importance=None,
         limit=None
     ):
-        results = []
+        if memory_type is not None:
+            self._validate_memory_type(memory_type)
+
+        if min_importance is not None:
+            min_importance = int(min_importance)
+
+        if limit is not None:
+            limit = max(0, int(limit))
 
         query_words = (
             set(re.findall(r"\w+", str(keyword).casefold()))
             if keyword else set()
         )
 
+        results = []
+
         for memory in self.memories:
 
-            if category and memory.get("category") != category:
-                continue
+            if category is not None:
+                if memory.get("category") != category:
+                    continue
 
-            if memory_type and memory.get(
-                "memory_type", "long_term"
-            ) != memory_type:
-                continue
+            if memory_type is not None:
+                if memory.get("memory_type") != memory_type:
+                    continue
 
             importance = memory.get("importance", 5)
 
@@ -162,7 +221,7 @@ class BHMemory:
         )
 
         if limit is not None:
-            results = results[:max(0, int(limit))]
+            results = results[:limit]
 
         for memory in results:
             memory["access_count"] = (
@@ -173,7 +232,7 @@ class BHMemory:
         if results:
             self._save()
 
-        return results
+        return deepcopy(results)
 
     def update(
         self,
@@ -184,33 +243,35 @@ class BHMemory:
         importance=None
     ):
         for memory in self.memories:
+
             if memory.get("id") != memory_id:
                 continue
 
             if text is not None:
-                if not str(text).strip():
+                if not isinstance(text, str):
+                    raise TypeError("Memory text must be a string.")
+
+                if not text.strip():
                     return None
 
-                memory["text"] = str(text).strip()
+                memory["text"] = text.strip()
 
             if category is not None:
                 memory["category"] = category
 
             if memory_type is not None:
-                if memory_type not in ("short_term", "long_term"):
-                    raise ValueError("Invalid memory type")
-
+                self._validate_memory_type(memory_type)
                 memory["memory_type"] = memory_type
 
             if importance is not None:
-                memory["importance"] = max(
-                    1, min(10, int(importance))
+                memory["importance"] = (
+                    self._validate_importance(importance)
                 )
 
             memory["updated_at"] = self._now()
             self._save()
 
-            return memory
+            return deepcopy(memory)
 
         return None
 
@@ -218,7 +279,8 @@ class BHMemory:
         old_count = len(self.memories)
 
         self.memories = [
-            memory for memory in self.memories
+            memory
+            for memory in self.memories
             if memory.get("id") != memory_id
         ]
 
@@ -232,7 +294,8 @@ class BHMemory:
         old_count = len(self.memories)
 
         self.memories = [
-            memory for memory in self.memories
+            memory
+            for memory in self.memories
             if memory.get("memory_type", "long_term") != "short_term"
         ]
 
@@ -247,16 +310,19 @@ class BHMemory:
         if memory_type is None:
             return len(self.memories)
 
+        self._validate_memory_type(memory_type)
+
         return sum(
-            1 for memory in self.memories
+            1
+            for memory in self.memories
             if memory.get("memory_type") == memory_type
         )
 
     def get_all(self):
-        return list(self.memories)
+        return deepcopy(self.memories)
 
     def save(self):
-        self._save()
+        return self._save()
 
 
 if __name__ == "__main__":
