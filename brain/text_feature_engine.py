@@ -1,3 +1,4 @@
+
 import math
 from brain.tokenizer import BHTokenizer
 
@@ -9,16 +10,34 @@ class BHTextFeatureEngine:
 
     def text_to_features(self, text):
 
+        # Handle empty or invalid input
+        if not isinstance(text, str) or not text.strip():
+            return [0.0, 0.0, 0.0, 0.0]
+
+        # Convert text into tokens
         self.tokenizer.learn(text)
         tokens = self.tokenizer.encode(text)
 
         if not tokens:
             return [0.0, 0.0, 0.0, 0.0]
 
+        # Generate 4 numeric features
         length = min(len(tokens) / 50, 1.0)
-        unique = min(len(set(tokens)) / max(len(tokens), 1), 1.0)
-        average = min(sum(tokens) / (len(tokens) * 100), 1.0)
-        complexity = min(math.log(len(tokens) + 1) / 5, 1.0)
+
+        unique = min(
+            len(set(tokens)) / len(tokens),
+            1.0
+        )
+
+        average = min(
+            sum(tokens) / (len(tokens) * 100),
+            1.0
+        )
+
+        complexity = min(
+            math.log(len(tokens) + 1) / 5,
+            1.0
+        )
 
         return [
             round(length, 4),
@@ -29,6 +48,10 @@ class BHTextFeatureEngine:
 
 
 if __name__ == "__main__":
+
     engine = BHTextFeatureEngine()
 
-    print(engine.text_to_features("What is Earth?"))
+    result = engine.text_to_features("What is Earth?")
+
+    print("BH-OMNI TEXT FEATURES")
+    print(result)
