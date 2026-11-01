@@ -12,21 +12,16 @@ class BlackHoleBrain:
 
     def __init__(self, knowledge_engine):
 
-        # Shared knowledge
         self.knowledge_engine = knowledge_engine
 
-        # Network manager
         self.network_manager = BHNetworkManager()
 
-        # Prediction engine
         self.predictive_engine = PredictiveEngine(
             knowledge_engine
         )
 
-        # Text processing and neural network
         self.text_network = BHTextNetwork()
 
-        # Automatically register text neural network
         self.network_manager.register(
             name="text",
             network=self.text_network.network,
@@ -34,12 +29,11 @@ class BlackHoleBrain:
             priority=10
         )
 
-        # Separate memory for each user
         self.user_memories = {}
 
         self.is_ready = True
 
-    # Get or create user memory
+    # Get or create isolated user memory
     def _get_user_memory(self, user_id):
 
         if user_id is None:
@@ -68,7 +62,7 @@ class BlackHoleBrain:
 
         return self.user_memories[user_id]
 
-    # Register another specialist network
+    # Network management
     def register_network(
         self,
         name,
@@ -96,18 +90,12 @@ class BlackHoleBrain:
         return self.network_manager.list_networks()
 
     def connect_networks(self, source, target):
-        return self.network_manager.connect(
-            source,
-            target
-        )
+        return self.network_manager.connect(source, target)
 
     def disconnect_networks(self, source, target):
-        return self.network_manager.disconnect(
-            source,
-            target
-        )
+        return self.network_manager.disconnect(source, target)
 
-    # Train the text neural network
+    # Train text neural network
     def train_text_network(
         self,
         text,
@@ -120,13 +108,12 @@ class BlackHoleBrain:
             learning_rate
         )
 
-    # Save text network weights
+    # Save neural network weights
     def save_text_network(self):
         self.text_network.save()
-
         return True
 
-    # Prepare prediction while typing
+    # Prediction while typing
     def think_ahead(self, typed_text):
 
         if not isinstance(typed_text, str):
@@ -135,40 +122,93 @@ class BlackHoleBrain:
         if not typed_text.strip():
             return None
 
-        return self.predictive_engine.prepare(
-            typed_text
-        )
+        return self.predictive_engine.prepare(typed_text)
 
-    # Remember information for a user
+    # Store user memory
     def remember_for_user(
         self,
         user_id,
         text,
-        category="general"
+        category="general",
+        memory_type="long_term",
+        importance=5
     ):
 
         memory = self._get_user_memory(user_id)
 
         return memory.remember(
-            text,
-            category,
-            "long_term"
+            text=text,
+            category=category,
+            memory_type=memory_type,
+            importance=importance
         )
 
-    # Recall user memories
+    # Retrieve user memories
     def recall_for_user(
         self,
         user_id,
         keyword=None,
-        category=None
+        category=None,
+        memory_type=None,
+        min_importance=None,
+        limit=None
     ):
 
         memory = self._get_user_memory(user_id)
 
         return memory.recall(
             keyword=keyword,
-            category=category
+            category=category,
+            memory_type=memory_type,
+            min_importance=min_importance,
+            limit=limit
         )
+
+    # Update existing memory
+    def update_user_memory(
+        self,
+        user_id,
+        memory_id,
+        text=None,
+        category=None,
+        memory_type=None,
+        importance=None
+    ):
+
+        memory = self._get_user_memory(user_id)
+
+        return memory.update(
+            memory_id=memory_id,
+            text=text,
+            category=category,
+            memory_type=memory_type,
+            importance=importance
+        )
+
+    # Forget a memory
+    def forget_user_memory(self, user_id, memory_id):
+
+        memory = self._get_user_memory(user_id)
+
+        return memory.forget(memory_id)
+
+    # Clear short-term memories
+    def clear_user_short_term_memory(self, user_id):
+
+        memory = self._get_user_memory(user_id)
+
+        return memory.clear_short_term()
+
+    # Count user memories
+    def get_user_memory_count(
+        self,
+        user_id,
+        memory_type=None
+    ):
+
+        memory = self._get_user_memory(user_id)
+
+        return memory.count(memory_type)
 
     # Process a user question
     def answer_request(
@@ -197,7 +237,7 @@ class BlackHoleBrain:
             question
         )
 
-        # Get separate user memory
+        # Retrieve this user's isolated memory
         user_memory = self._get_user_memory(user_id)
 
         knowledge_results = (
@@ -206,10 +246,11 @@ class BlackHoleBrain:
         )
 
         relevant_memories = user_memory.recall(
-            keyword=question
+            keyword=question,
+            limit=10
         )
 
-        # Run text network using converted features
+        # Run neural networks
         network_results = {}
 
         if network_inputs is not None:
