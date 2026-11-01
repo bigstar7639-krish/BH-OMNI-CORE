@@ -38,3 +38,5 @@ jobs:
 
       - name: Run health check
         run: python -m brain.health_check
+      - name: Multilingual Health Check
+        run: python -m brain.multilingual_health_check
