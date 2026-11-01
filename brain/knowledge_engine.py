@@ -1,6 +1,7 @@
 
 import json
 import re
+from copy import deepcopy
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -20,10 +21,36 @@ class BHKnowledge:
             with open(self.file_path, "r", encoding="utf-8") as file:
                 data = json.load(file)
 
-            return data if isinstance(data, list) else []
+        except json.JSONDecodeError as error:
+            raise ValueError(
+                f"Knowledge database contains invalid JSON: {self.file_path}"
+            ) from error
 
-        except (json.JSONDecodeError, OSError):
-            return []
+        except OSError as error:
+            raise OSError(
+                f"Unable to read knowledge database: {self.file_path}"
+            ) from error
+
+        if not isinstance(data, list):
+            raise ValueError("Knowledge database must contain a JSON list.")
+
+        valid_entries = []
+
+        for entry in data:
+            if not isinstance(entry, dict):
+                continue
+
+            if (
+                not isinstance(entry.get("id"), int)
+                or isinstance(entry.get("id"), bool)
+                or not isinstance(entry.get("title"), str)
+                or not isinstance(entry.get("content"), str)
+            ):
+                continue
+
+            valid_entries.append(entry)
+
+        return valid_entries
 
     def _save(self):
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -32,41 +59,90 @@ class BHKnowledge:
             self.file_path.suffix + ".tmp"
         )
 
-        with open(temp_path, "w", encoding="utf-8") as file:
-            json.dump(
-                self.data,
-                file,
-                ensure_ascii=False,
-                indent=2
-            )
+        try:
+            with open(temp_path, "w", encoding="utf-8") as file:
+                json.dump(
+                    self.data,
+                    file,
+                    ensure_ascii=False,
+                    indent=2
+                )
+                file.flush()
 
-        temp_path.replace(self.file_path)
+            temp_path.replace(self.file_path)
 
-    def _words(self, text):
-        return set(re.findall(r"\w+", str(text).lower()))
+        except OSError:
+            try:
+                if temp_path.exists():
+                    temp_path.unlink()
+            except OSError:
+                pass
+
+            raise
+
+        return True
+
+    @staticmethod
+    def _validate_text(value, field_name):
+        if not isinstance(value, str):
+            raise TypeError(f"{field_name} must be a string.")
+
+        value = value.strip()
+
+        if not value:
+            raise ValueError(f"{field_name} cannot be empty.")
+
+        return value
+
+    @staticmethod
+    def _validate_id(knowledge_id):
+        if not isinstance(knowledge_id, int) or isinstance(
+            knowledge_id, bool
+        ):
+            raise TypeError("Knowledge ID must be an integer.")
+
+    @staticmethod
+    def _validate_limit(limit):
+        if not isinstance(limit, int) or isinstance(limit, bool):
+            raise TypeError("Limit must be an integer.")
+
+        if limit < 0:
+            raise ValueError("Limit cannot be negative.")
+
+    @staticmethod
+    def _words(text):
+        if not isinstance(text, str):
+            return set()
+
+        return set(re.findall(r"\w+", text.lower()))
+
+    def _next_id(self):
+        valid_ids = [
+            entry["id"]
+            for entry in self.data
+            if isinstance(entry.get("id"), int)
+            and not isinstance(entry.get("id"), bool)
+        ]
+
+        return max(valid_ids, default=0) + 1
 
     def add(self, title, content, category="general", source="user"):
-        title = str(title).strip()
-        content = str(content).strip()
+        title = self._validate_text(title, "Title")
+        content = self._validate_text(content, "Content")
 
-        if not title or not content:
-            raise ValueError("Title and content cannot be empty.")
+        category = self._validate_text(category, "Category")
+        source = self._validate_text(source, "Source")
 
-        # Duplicate detection
         for entry in self.data:
             if (
-                entry.get("title", "").lower() == title.lower()
-                and entry.get("content", "").lower() == content.lower()
+                entry.get("title", "").casefold() == title.casefold()
+                and entry.get("content", "").casefold()
+                == content.casefold()
             ):
-                return entry
-
-        new_id = max(
-            (item.get("id", 0) for item in self.data),
-            default=0
-        ) + 1
+                return deepcopy(entry)
 
         entry = {
-            "id": new_id,
+            "id": self._next_id(),
             "title": title,
             "content": content,
             "category": category,
@@ -78,20 +154,28 @@ class BHKnowledge:
         self.data.append(entry)
         self._save()
 
-        return entry
+        return deepcopy(entry)
 
     def search(self, keyword, category=None, limit=10):
+        if not isinstance(keyword, str):
+            raise TypeError("Keyword must be a string.")
+
+        self._validate_limit(limit)
+
+        if category is not None:
+            category = self._validate_text(category, "Category")
+
         query_words = self._words(keyword)
 
-        if not query_words:
+        if not query_words or limit == 0:
             return []
 
         results = []
 
         for entry in self.data:
-
-            if category and entry.get("category") != category:
-                continue
+            if category is not None:
+                if entry.get("category") != category:
+                    continue
 
             title_words = self._words(entry.get("title", ""))
             content_words = self._words(entry.get("content", ""))
@@ -103,9 +187,9 @@ class BHKnowledge:
 
             score = title_score + content_score + category_score
 
-            if str(keyword).strip().lower() == entry.get(
+            if keyword.strip().casefold() == entry.get(
                 "title", ""
-            ).lower():
+            ).casefold():
                 score += 10
 
             if score > 0:
@@ -117,37 +201,50 @@ class BHKnowledge:
         )
 
         return [
-            entry for score, entry in results[:max(0, limit)]
+            deepcopy(entry)
+            for score, entry in results[:limit]
         ]
 
-    def update(self, knowledge_id, title=None, content=None,
-               category=None, source=None):
+    def update(
+        self,
+        knowledge_id,
+        title=None,
+        content=None,
+        category=None,
+        source=None
+    ):
+        self._validate_id(knowledge_id)
 
         for entry in self.data:
-            if entry.get("id") == knowledge_id:
+            if entry.get("id") != knowledge_id:
+                continue
 
-                if title is not None:
-                    entry["title"] = str(title).strip()
+            if title is not None:
+                entry["title"] = self._validate_text(title, "Title")
 
-                if content is not None:
-                    entry["content"] = str(content).strip()
+            if content is not None:
+                entry["content"] = self._validate_text(content, "Content")
 
-                if category is not None:
-                    entry["category"] = category
+            if category is not None:
+                entry["category"] = self._validate_text(
+                    category, "Category"
+                )
 
-                if source is not None:
-                    entry["source"] = source
+            if source is not None:
+                entry["source"] = self._validate_text(source, "Source")
 
-                entry["updated_at"] = datetime.now(
-                    timezone.utc
-                ).isoformat()
+            entry["updated_at"] = datetime.now(
+                timezone.utc
+            ).isoformat()
 
-                self._save()
-                return entry
+            self._save()
+            return deepcopy(entry)
 
         return None
 
     def delete(self, knowledge_id):
+        self._validate_id(knowledge_id)
+
         original_count = len(self.data)
 
         self.data = [
@@ -162,18 +259,23 @@ class BHKnowledge:
         return True
 
     def get(self, knowledge_id):
+        self._validate_id(knowledge_id)
+
         for entry in self.data:
             if entry.get("id") == knowledge_id:
-                return entry
+                return deepcopy(entry)
 
         return None
 
     def get_all(self, category=None):
         if category is None:
-            return list(self.data)
+            return deepcopy(self.data)
+
+        category = self._validate_text(category, "Category")
 
         return [
-            entry for entry in self.data
+            deepcopy(entry)
+            for entry in self.data
             if entry.get("category") == category
         ]
 
@@ -181,7 +283,7 @@ class BHKnowledge:
         return len(self.data)
 
     def save(self):
-        self._save()
+        return self._save()
 
 
 if __name__ == "__main__":
