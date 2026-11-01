@@ -1,5 +1,7 @@
+
 from pathlib import Path
 import hashlib
+import math
 import re
 
 from brain.network_manager import BHNetworkManager
@@ -52,7 +54,6 @@ class BlackHoleBrain:
 
     # User memory management
     def _get_user_memory(self, user_id):
-
         if user_id is None:
             raise ValueError("A valid user_id is required.")
 
@@ -62,7 +63,6 @@ class BlackHoleBrain:
             raise ValueError("A valid user_id is required.")
 
         if user_id not in self.user_memories:
-
             safe_id = hashlib.sha256(
                 user_id.encode("utf-8")
             ).hexdigest()
@@ -128,7 +128,6 @@ class BlackHoleBrain:
         return True
 
     def think_ahead(self, typed_text):
-
         if not isinstance(typed_text, str):
             return None
 
@@ -199,10 +198,14 @@ class BlackHoleBrain:
     # Meaningful word extraction
     @classmethod
     def _meaningful_words(cls, text):
+        if not isinstance(text, str):
+            return set()
 
+        # Unicode-aware tokenization supports Tamil and other scripts.
         words = re.findall(
-            r"[a-z0-9]+",
-            str(text).lower()
+            r"[^\W_]+",
+            text.casefold(),
+            flags=re.UNICODE
         )
 
         return {
@@ -218,16 +221,20 @@ class BlackHoleBrain:
         question,
         results
     ):
-
         question_words = cls._meaningful_words(question)
 
         if not question_words or not isinstance(results, list):
             return []
 
-        relevant = []
+        # Require a meaningful proportion of question-word overlap.
+        minimum_overlap = max(
+            1,
+            math.ceil(len(question_words) * 0.25)
+        )
 
-        for item in results:
+        scored_results = []
 
+        for index, item in enumerate(results):
             if not isinstance(item, dict):
                 continue
 
@@ -237,19 +244,27 @@ class BlackHoleBrain:
                 str(item.get("category", ""))
             ))
 
-            entry_words = cls._meaningful_words(
-                searchable_text
-            )
+            entry_words = cls._meaningful_words(searchable_text)
+            overlap = len(question_words.intersection(entry_words))
 
-            if question_words.intersection(entry_words):
-                relevant.append(item)
+            if overlap >= minimum_overlap:
+                scored_results.append(
+                    (overlap, index, item)
+                )
 
-        return relevant
+        # Higher overlap first; preserve original order for ties.
+        scored_results.sort(
+            key=lambda result: (-result[0], result[1])
+        )
 
-    # Build extractive answer
+        return [
+            item
+            for _, _, item in scored_results
+        ]
+
+    # Build extractive answer from shared knowledge only
     @staticmethod
     def _build_answer(question, knowledge_results):
-
         if not knowledge_results:
             return (
                 "I don't have enough information in my "
@@ -279,7 +294,6 @@ class BlackHoleBrain:
         question,
         network_inputs=None
     ):
-
         if not isinstance(question, str):
             return {
                 "status": "error",
@@ -296,7 +310,6 @@ class BlackHoleBrain:
 
         try:
             user_memory = self._get_user_memory(user_id)
-
         except ValueError as error:
             return {
                 "status": "error",
@@ -315,14 +328,12 @@ class BlackHoleBrain:
         )
 
         # Filter unrelated results
-        knowledge_results = (
-            self._filter_relevant_knowledge(
-                question,
-                raw_knowledge_results
-            )
+        knowledge_results = self._filter_relevant_knowledge(
+            question,
+            raw_knowledge_results
         )
 
-        # Retrieve user memories
+        # Retrieve personal memories separately.
         relevant_memories = user_memory.recall(
             keyword=question,
             limit=10
@@ -330,19 +341,15 @@ class BlackHoleBrain:
 
         # Run neural networks
         if network_inputs is not None:
-
             network_results = (
                 self.network_manager.run_active_networks(
                     network_inputs
                 )
             )
-
         else:
-
             network_results = {}
 
             if "text" in self.network_manager.networks:
-
                 features = (
                     self.text_network.feature_engine.text_to_features(
                         question
@@ -356,7 +363,7 @@ class BlackHoleBrain:
                     )
                 )
 
-        # Compose answer
+        # Build answer using shared knowledge only.
         answer = self._build_answer(
             question,
             knowledge_results
@@ -383,7 +390,6 @@ class BlackHoleBrain:
 
     # System health check
     def health_check(self):
-
         return {
             "ready": self.is_ready,
             "knowledge_count": self.knowledge_engine.count(),
