@@ -14,8 +14,17 @@ class BHNeuralNetwork:
         output_size,
         seed=None
     ):
-        if min(input_size, hidden_size, output_size) <= 0:
-            raise ValueError("Network sizes must be positive.")
+        for name, value in (
+            ("input_size", input_size),
+            ("hidden_size", hidden_size),
+            ("output_size", output_size)
+        ):
+            if (
+                not isinstance(value, int)
+                or isinstance(value, bool)
+                or value <= 0
+            ):
+                raise ValueError(f"{name} must be a positive integer.")
 
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -23,13 +32,12 @@ class BHNeuralNetwork:
 
         self.rng = random.Random(seed)
 
-        # Xavier-style initialization
+        limit1 = math.sqrt(6.0 / (input_size + hidden_size))
+        limit2 = math.sqrt(6.0 / (hidden_size + output_size))
+
         self.weights = [
             [
-                self.rng.uniform(
-                    -math.sqrt(6 / (input_size + hidden_size)),
-                    math.sqrt(6 / (input_size + hidden_size))
-                )
+                self.rng.uniform(-limit1, limit1)
                 for _ in range(hidden_size)
             ]
             for _ in range(input_size)
@@ -37,10 +45,7 @@ class BHNeuralNetwork:
 
         self.output_weights = [
             [
-                self.rng.uniform(
-                    -math.sqrt(6 / (hidden_size + output_size)),
-                    math.sqrt(6 / (hidden_size + output_size))
-                )
+                self.rng.uniform(-limit2, limit2)
                 for _ in range(output_size)
             ]
             for _ in range(hidden_size)
@@ -52,31 +57,55 @@ class BHNeuralNetwork:
         self.training_steps = 0
         self.last_loss = None
 
+    @staticmethod
+    def _number(value, name):
+        if isinstance(value, bool):
+            raise TypeError(f"{name} must be a number.")
+
+        try:
+            number = float(value)
+        except (TypeError, ValueError, OverflowError) as error:
+            raise TypeError(f"{name} must be a number.") from error
+
+        if not math.isfinite(number):
+            raise ValueError(f"{name} must be finite.")
+
+        return number
+
     def sigmoid(self, x):
+        x = self._number(x, "Sigmoid input")
         x = max(-60.0, min(60.0, x))
         return 1.0 / (1.0 + math.exp(-x))
 
     def _validate(self, inputs, targets=None):
 
+        if not isinstance(inputs, (list, tuple)):
+            raise TypeError("Inputs must be a list or tuple.")
+
         if len(inputs) != self.input_size:
             raise ValueError("Incorrect input size.")
 
-        if not all(math.isfinite(float(x)) for x in inputs):
-            raise ValueError("Inputs must be finite numbers.")
+        for value in inputs:
+            self._number(value, "Input")
 
         if targets is not None:
+            if not isinstance(targets, (list, tuple)):
+                raise TypeError("Targets must be a list or tuple.")
+
             if len(targets) != self.output_size:
                 raise ValueError("Incorrect target size.")
 
-            if not all(
-                math.isfinite(float(x)) and 0 <= float(x) <= 1
-                for x in targets
-            ):
-                raise ValueError("Targets must be between 0 and 1.")
+            for value in targets:
+                number = self._number(value, "Target")
+
+                if not 0.0 <= number <= 1.0:
+                    raise ValueError("Targets must be between 0 and 1.")
 
     def _forward_details(self, inputs):
 
         self._validate(inputs)
+
+        inputs = [float(value) for value in inputs]
 
         hidden = []
 
@@ -84,7 +113,7 @@ class BHNeuralNetwork:
             total = self.bias[j]
 
             for i in range(self.input_size):
-                total += float(inputs[i]) * self.weights[i][j]
+                total += inputs[i] * self.weights[i][j]
 
             hidden.append(self.sigmoid(total))
 
@@ -108,18 +137,25 @@ class BHNeuralNetwork:
 
         self._validate(inputs, targets)
 
-        if not math.isfinite(learning_rate) or learning_rate <= 0:
+        learning_rate = self._number(
+            learning_rate, "Learning rate"
+        )
+
+        if learning_rate <= 0:
             raise ValueError("Learning rate must be positive.")
+
+        inputs = [float(value) for value in inputs]
+        targets = [float(value) for value in targets]
 
         hidden, outputs = self._forward_details(inputs)
 
         output_deltas = []
 
         for k in range(self.output_size):
-            error = float(targets[k]) - outputs[k]
+            error = targets[k] - outputs[k]
 
             output_deltas.append(
-                error * outputs[k] * (1 - outputs[k])
+                error * outputs[k] * (1.0 - outputs[k])
             )
 
         hidden_deltas = []
@@ -131,7 +167,7 @@ class BHNeuralNetwork:
             )
 
             hidden_deltas.append(
-                error * hidden[j] * (1 - hidden[j])
+                error * hidden[j] * (1.0 - hidden[j])
             )
 
         # Update output layer
@@ -142,20 +178,22 @@ class BHNeuralNetwork:
                 )
 
         for k in range(self.output_size):
-            self.output_bias[k] += learning_rate * output_deltas[k]
+            self.output_bias[k] += (
+                learning_rate * output_deltas[k]
+            )
 
         # Update hidden layer
         for i in range(self.input_size):
             for j in range(self.hidden_size):
                 self.weights[i][j] += (
-                    learning_rate * hidden_deltas[j] * float(inputs[i])
+                    learning_rate * hidden_deltas[j] * inputs[i]
                 )
 
         for j in range(self.hidden_size):
             self.bias[j] += learning_rate * hidden_deltas[j]
 
         loss = sum(
-            (float(targets[k]) - outputs[k]) ** 2
+            (targets[k] - outputs[k]) ** 2
             for k in range(self.output_size)
         ) / self.output_size
 
@@ -166,30 +204,68 @@ class BHNeuralNetwork:
 
     def train_batch(self, samples, learning_rate=0.5):
 
-        if not samples:
+        if not isinstance(samples, (list, tuple)) or not samples:
             raise ValueError("Training batch cannot be empty.")
+
+        learning_rate = self._number(
+            learning_rate, "Learning rate"
+        )
+
+        if learning_rate <= 0:
+            raise ValueError("Learning rate must be positive.")
+
+        # Validate the entire batch before changing network weights.
+        validated_samples = []
+
+        for sample in samples:
+            if not isinstance(sample, (list, tuple)) or len(sample) != 2:
+                raise ValueError(
+                    "Each training sample must contain inputs and targets."
+                )
+
+            inputs, targets = sample
+            self._validate(inputs, targets)
+
+            validated_samples.append((
+                list(inputs),
+                list(targets)
+            ))
 
         total_loss = 0.0
 
-        for inputs, targets in samples:
+        for inputs, targets in validated_samples:
             total_loss += self.train(
                 inputs,
                 targets,
                 learning_rate
             )
 
-        return total_loss / len(samples)
+        return total_loss / len(validated_samples)
 
     def evaluate(self, samples):
 
-        if not samples:
+        if not isinstance(samples, (list, tuple)) or not samples:
             raise ValueError("Evaluation data cannot be empty.")
+
+        validated_samples = []
+
+        for sample in samples:
+            if not isinstance(sample, (list, tuple)) or len(sample) != 2:
+                raise ValueError(
+                    "Each evaluation sample must contain inputs and targets."
+                )
+
+            inputs, targets = sample
+            self._validate(inputs, targets)
+
+            validated_samples.append((
+                list(inputs),
+                list(targets)
+            ))
 
         total_loss = 0.0
 
-        for inputs, targets in samples:
-            self._validate(inputs, targets)
-
+        for inputs, targets in validated_samples:
             outputs = self.forward(inputs)
 
             total_loss += sum(
@@ -197,9 +273,57 @@ class BHNeuralNetwork:
                 for k in range(self.output_size)
             ) / self.output_size
 
-        return total_loss / len(samples)
+        return total_loss / len(validated_samples)
+
+    def _validate_parameters(self):
+
+        expected_shapes = (
+            (self.weights, self.input_size, self.hidden_size, "weights"),
+            (
+                self.output_weights,
+                self.hidden_size,
+                self.output_size,
+                "output_weights"
+            )
+        )
+
+        for matrix, rows, columns, name in expected_shapes:
+            if not isinstance(matrix, list) or len(matrix) != rows:
+                raise ValueError(f"Invalid {name} dimensions.")
+
+            for row in matrix:
+                if not isinstance(row, list) or len(row) != columns:
+                    raise ValueError(f"Invalid {name} dimensions.")
+
+                for value in row:
+                    self._number(value, name)
+
+        for values, expected, name in (
+            (self.bias, self.hidden_size, "bias"),
+            (self.output_bias, self.output_size, "output_bias")
+        ):
+            if not isinstance(values, list) or len(values) != expected:
+                raise ValueError(f"Invalid {name} dimensions.")
+
+            for value in values:
+                self._number(value, name)
+
+        if (
+            not isinstance(self.training_steps, int)
+            or isinstance(self.training_steps, bool)
+            or self.training_steps < 0
+        ):
+            raise ValueError("Invalid training_steps.")
+
+        if self.last_loss is not None:
+            loss = self._number(self.last_loss, "last_loss")
+
+            if loss < 0:
+                raise ValueError("last_loss cannot be negative.")
 
     def save(self, path="brain/weights.json"):
+
+        self._validate_parameters()
 
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -219,16 +343,56 @@ class BHNeuralNetwork:
 
         temp_path = path.with_suffix(path.suffix + ".tmp")
 
-        with open(temp_path, "w", encoding="utf-8") as file:
-            json.dump(data, file, indent=2)
+        try:
+            with open(temp_path, "w", encoding="utf-8") as file:
+                json.dump(
+                    data,
+                    file,
+                    ensure_ascii=False,
+                    indent=2,
+                    allow_nan=False
+                )
+                file.flush()
 
-        temp_path.replace(path)
+            temp_path.replace(path)
+
+        except OSError:
+            try:
+                if temp_path.exists():
+                    temp_path.unlink()
+            except OSError:
+                pass
+
+            raise
+
+        return True
 
     @classmethod
     def load(cls, path="brain/weights.json"):
 
-        with open(path, "r", encoding="utf-8") as file:
-            data = json.load(file)
+        try:
+            with open(path, "r", encoding="utf-8") as file:
+                data = json.load(file)
+
+        except json.JSONDecodeError as error:
+            raise ValueError("Saved network file contains invalid JSON.") from error
+
+        if not isinstance(data, dict):
+            raise ValueError("Saved network data must be a JSON object.")
+
+        required = (
+            "input_size",
+            "hidden_size",
+            "output_size",
+            "weights",
+            "output_weights",
+            "bias",
+            "output_bias"
+        )
+
+        for key in required:
+            if key not in data:
+                raise ValueError(f"Missing saved network field: {key}")
 
         network = cls(
             data["input_size"],
@@ -244,16 +408,7 @@ class BHNeuralNetwork:
         network.training_steps = data.get("training_steps", 0)
         network.last_loss = data.get("last_loss")
 
-        # Validate saved dimensions
-        if (
-            len(network.weights) != network.input_size
-            or any(len(row) != network.hidden_size for row in network.weights)
-            or len(network.output_weights) != network.hidden_size
-            or any(len(row) != network.output_size for row in network.output_weights)
-            or len(network.bias) != network.hidden_size
-            or len(network.output_bias) != network.output_size
-        ):
-            raise ValueError("Saved network dimensions are invalid.")
+        network._validate_parameters()
 
         return network
 
@@ -279,5 +434,8 @@ if __name__ == "__main__":
 
     brain.save()
 
+    loaded_brain = BHNeuralNetwork.load()
+
+    print("Loaded network:", loaded_brain.forward([0, 1]))
     print("Training steps:", brain.training_steps)
     print("XOR training demo completed.")
