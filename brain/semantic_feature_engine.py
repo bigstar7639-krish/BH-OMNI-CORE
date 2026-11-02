@@ -1,7 +1,7 @@
 
-"""BH-OMNI CORE: Initial multilingual semantic signal extractor.
+"""BH-OMNI CORE: Rule-based multilingual semantic signal extractor.
 
-This is a rule-based prototype, not a trained language model.
+This is an experimental prototype, not a trained language model.
 """
 
 import unicodedata
@@ -12,20 +12,45 @@ class BHSemanticFeatureEngine:
 
     LEXICONS = {
         "negation": {
-            "not", "no", "never", "don't", "cannot",
-            "இல்லை", "வேண்டாம்", "முடியாது"
+            "not",
+            "no",
+            "never",
+            "don't",
+            "cannot",
+            "இல்லை",
+            "வேண்டாம்",
+            "முடியாது",
+            "பிடிக்கவில்லை",
         },
         "positive": {
-            "good", "great", "happy", "love", "excellent",
-            "நல்ல", "நன்று", "மகிழ்ச்சி", "பிடிக்கும்"
+            "good",
+            "great",
+            "happy",
+            "love",
+            "excellent",
+            "நல்ல",
+            "நன்று",
+            "மகிழ்ச்சி",
+            "பிடிக்கும்",
         },
         "negative": {
-            "bad", "sad", "hate", "angry", "terrible",
-            "கெட்ட", "சோகம்", "பிடிக்கவில்லை", "கோபம்"
+            "bad",
+            "sad",
+            "hate",
+            "angry",
+            "terrible",
+            "கெட்ட",
+            "சோகம்",
+            "பிடிக்கவில்லை",
+            "கோபம்",
         },
         "urgency": {
-            "urgent", "emergency", "immediately", "asap",
-            "அவசரம்", "உடனே"
+            "urgent",
+            "emergency",
+            "immediately",
+            "asap",
+            "அவசரம்",
+            "உடனே",
         },
     }
 
@@ -45,7 +70,9 @@ class BHSemanticFeatureEngine:
 
     @staticmethod
     def _normalize(text):
-        return unicodedata.normalize("NFC", text).casefold().strip()
+        return unicodedata.normalize(
+            "NFC", text
+        ).casefold().strip()
 
     @staticmethod
     def _tokenize(text):
@@ -57,8 +84,10 @@ class BHSemanticFeatureEngine:
 
             if category.startswith(("L", "N")):
                 current.append(char)
+
             elif category.startswith("M") and current:
                 current.append(char)
+
             else:
                 if current:
                     tokens.append("".join(current))
@@ -89,30 +118,39 @@ class BHSemanticFeatureEngine:
         negation = bool(
             token_set & self.lexicons["negation"]
         )
+
         positive_count = len(
             token_set & self.lexicons["positive"]
         )
+
         negative_count = len(
             token_set & self.lexicons["negative"]
         )
+
         urgency = bool(
             token_set & self.lexicons["urgency"]
         )
 
         sentiment = 0.0
 
-        if positive_count + negative_count:
+        total_sentiment_words = (
+            positive_count + negative_count
+        )
+
+        if total_sentiment_words:
             sentiment = (
                 positive_count - negative_count
-            ) / (positive_count + negative_count)
+            ) / total_sentiment_words
+
+        question = (
+            "?" in text
+            or "என்ன" in normalized
+            or "ஏன்" in normalized
+            or "எப்படி" in normalized
+        )
 
         return {
-            "question_signal": float(
-                "?" in text or "?" in normalized
-                or "என்ன" in normalized
-                or "ஏன்" in normalized
-                or "எப்படி" in normalized
-            ),
+            "question_signal": float(question),
             "negation_signal": float(negation),
             "sentiment_signal": round(sentiment, 4),
             "urgency_signal": float(urgency),
@@ -131,9 +169,10 @@ if __name__ == "__main__":
         "I do not like this",
         "This is urgent",
         "தமிழ் மொழி அழகானது",
-        "எனக்கு இது பிடிக்கவில்லை"
+        "எனக்கு இது பிடிக்கவில்லை",
+        "இது என்ன?",
     ]
 
     for sample in samples:
-        print(sample)
-        print(engine.extract(sample))
+        print("Text:", sample)
+        print("Features:", engine.extract(sample))
