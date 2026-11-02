@@ -36,7 +36,6 @@ Run these commands from the repository root:
 python -m compileall -q brain tests
 python -m unittest discover -s tests -v
 python -m brain.test_brain
-python -m unittest brain.test_brain_core -v
 python -m brain.health_check
 python -m brain.multilingual_health_check
 python -m brain.semantic_health_check
