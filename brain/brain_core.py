@@ -1,7 +1,6 @@
 
 from pathlib import Path
 import hashlib
-import math
 import re
 
 from brain.network_manager import BHNetworkManager
@@ -9,6 +8,7 @@ from brain.predictive_engine import PredictiveEngine
 from brain.memory_engine import BHMemory
 from brain.text_network import BHTextNetwork
 from brain.multilingual_pipeline import BHMultilingualPipeline
+from brain.text_relevance_engine import BHTextRelevanceEngine
 
 
 class BlackHoleBrain:
@@ -46,6 +46,7 @@ class BlackHoleBrain:
 
         self.text_network = BHTextNetwork()
         self.multilingual_pipeline = BHMultilingualPipeline()
+        self.relevance_engine = BHTextRelevanceEngine()
 
         self.network_manager.register(
             name="text",
@@ -227,25 +228,17 @@ class BlackHoleBrain:
         }
 
     # Knowledge relevance filter
-    @classmethod
-    def _filter_relevant_knowledge(
-        cls,
-        question,
-        results
-    ):
-        question_words = cls._meaningful_words(question)
-
-        if not question_words or not isinstance(results, list):
+    def _filter_relevant_knowledge(self, question, results):
+        if not isinstance(question, str):
             return []
 
-        minimum_overlap = max(
-            1,
-            math.ceil(len(question_words) * 0.25)
-        )
+        if not isinstance(results, (list, tuple)):
+            return []
 
-        scored_results = []
+        candidates = []
+        valid_items = []
 
-        for index, item in enumerate(results):
+        for item in results:
             if not isinstance(item, dict):
                 continue
 
@@ -255,26 +248,18 @@ class BlackHoleBrain:
                 str(item.get("category", ""))
             ))
 
-            entry_words = cls._meaningful_words(
-                searchable_text
-            )
+            candidates.append(searchable_text)
+            valid_items.append(item)
 
-            overlap = len(
-                question_words.intersection(entry_words)
-            )
-
-            if overlap >= minimum_overlap:
-                scored_results.append(
-                    (overlap, index, item)
-                )
-
-        scored_results.sort(
-            key=lambda result: (-result[0], result[1])
+        ranked = self.relevance_engine.rank(
+            question,
+            candidates
         )
 
         return [
-            item
-            for _, _, item in scored_results
+            valid_items[result["index"]]
+            for result in ranked
+            if result["score"] > 0
         ]
 
     # Build extractive answer
@@ -438,5 +423,8 @@ class BlackHoleBrain:
             ),
             "multilingual_pipeline": (
                 self.multilingual_pipeline is not None
+            ),
+            "relevance_engine": (
+                self.relevance_engine is not None
             )
         }
