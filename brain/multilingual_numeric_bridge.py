@@ -6,12 +6,7 @@ from brain.numeric_brain import BHNumericBrain
 
 
 class BHMultilingualNumericBridge:
-    """
-    Connects multilingual text features to the sparse numeric brain.
-
-    Uses the existing text feature engine and stores its four
-    numerical outputs in stable feature slots.
-    """
+    """Connects text features to dynamically allocated numeric features."""
 
     def __init__(self):
         self.text_engine = BHTextFeatureEngine()
@@ -21,15 +16,17 @@ class BHMultilingualNumericBridge:
         if not isinstance(text, str):
             raise TypeError("Text must be a string")
 
+        if not text.strip():
+            raise ValueError("Text cannot be empty")
+
         features = self.text_engine.text_to_features(text)
 
         if not isinstance(features, (list, tuple)):
             raise ValueError("Text engine must return a list or tuple")
 
-        if len(features) != 4:
-            raise ValueError("Expected exactly four text features")
+        self.numeric_brain.clear()
 
-        for index, value in enumerate(features):
+        for value in features:
             try:
                 number = float(value)
             except (TypeError, ValueError, OverflowError):
@@ -38,8 +35,10 @@ class BHMultilingualNumericBridge:
             if not math.isfinite(number):
                 raise ValueError("Text feature must be finite")
 
-            if not self.numeric_brain.set_feature(index, number):
-                raise ValueError("Could not store text feature")
+            feature_id = self.numeric_brain.add_feature(number)
+
+            if feature_id is None:
+                raise ValueError("Could not allocate numeric feature")
 
         return self.numeric_brain.get_vector()
 
