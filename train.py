@@ -1,8 +1,8 @@
 
-"""Backward-compatible entry point for brain training."""
+"""Backward-compatible entry point for BH-OMNI CORE training."""
 
-from brain.train import main
+from brain.train import train_xor
 
 
 if __name__ == "__main__":
-    main()
+    train_xor()
