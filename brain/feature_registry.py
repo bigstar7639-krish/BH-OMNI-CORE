@@ -1,5 +1,5 @@
 
-"""BH-OMNI CORE: Unlimited-growth sparse feature registry."""
+"""BH-OMNI CORE: Dynamic sparse feature registry."""
 
 import json
 import math
@@ -9,20 +9,15 @@ from pathlib import Path
 
 
 class BHFeatureRegistry:
-    """
-    Dynamically register features without a fixed software capacity.
-
-    Uses sparse dictionaries instead of allocating a huge dense array.
-    Actual growth is limited by available system resources.
-    """
+    """Register sparse features with stable, non-reused IDs."""
 
     VERSION = 2
 
     def __init__(self, file_path=None):
         self.file_path = Path(file_path) if file_path else None
-
         self.features = {}
         self.reverse_features = {}
+        self.next_id = 0
 
         if self.file_path and self.file_path.exists():
             self.load()
@@ -33,7 +28,6 @@ class BHFeatureRegistry:
             raise TypeError("Feature name must be a string.")
 
         name = name.strip()
-
         if not name:
             raise ValueError("Feature name cannot be empty.")
 
@@ -45,7 +39,6 @@ class BHFeatureRegistry:
             raise TypeError("Feature values must be numeric.")
 
         value = float(value)
-
         if not math.isfinite(value):
             raise ValueError("Feature values must be finite.")
 
@@ -58,7 +51,8 @@ class BHFeatureRegistry:
         if name in self.features:
             return self.features[name]
 
-        feature_id = len(self.features)
+        feature_id = self.next_id
+        self.next_id += 1
 
         self.features[name] = feature_id
         self.reverse_features[feature_id] = name
@@ -82,7 +76,6 @@ class BHFeatureRegistry:
         return self.reverse_features.get(feature_id)
 
     def encode_sparse(self, values):
-        """Convert named features into a sparse ID-to-value dictionary."""
         if not isinstance(values, dict):
             raise TypeError("values must be a dictionary.")
 
@@ -92,16 +85,13 @@ class BHFeatureRegistry:
             name = self._validate_name(name)
             value = self._validate_value(raw_value)
 
-            if value == 0.0:
-                continue
-
-            feature_id = self.register(name)
-            result[feature_id] = value
+            if value != 0.0:
+                feature_id = self.register(name)
+                result[feature_id] = value
 
         return result
 
     def decode_sparse(self, vector):
-        """Convert a sparse ID-to-value dictionary into named features."""
         if not isinstance(vector, dict):
             raise TypeError("vector must be a dictionary.")
 
@@ -112,7 +102,6 @@ class BHFeatureRegistry:
                 raise TypeError("Feature IDs must be integers.")
 
             name = self.get_name(feature_id)
-
             if name is None:
                 raise ValueError(f"Unknown feature ID: {feature_id}")
 
@@ -124,13 +113,8 @@ class BHFeatureRegistry:
         return result
 
     def remove(self, name):
-        """
-        Remove a feature without reusing its old ID.
-
-        IDs of remaining features stay unchanged.
-        """
+        """Remove a feature without reusing its ID."""
         name = self._validate_name(name)
-
         feature_id = self.features.pop(name, None)
 
         if feature_id is None:
@@ -149,7 +133,7 @@ class BHFeatureRegistry:
 
         data = {
             "version": self.VERSION,
-            "next_id": max(self.reverse_features, default=-1) + 1,
+            "next_id": self.next_id,
             "features": self.features
         }
 
@@ -164,20 +148,12 @@ class BHFeatureRegistry:
                 delete=False
             ) as file:
                 temp_path = Path(file.name)
-
-                json.dump(
-                    data,
-                    file,
-                    ensure_ascii=False,
-                    indent=2
-                )
-
+                json.dump(data, file, ensure_ascii=False, indent=2)
                 file.flush()
                 os.fsync(file.fileno())
 
             temp_path.replace(target)
             self.file_path = target
-
             return True
 
         finally:
@@ -200,7 +176,6 @@ class BHFeatureRegistry:
             raise ValueError("Unsupported registry version.")
 
         saved_features = data.get("features")
-
         if not isinstance(saved_features, dict):
             raise ValueError("Invalid saved features.")
 
@@ -216,11 +191,8 @@ class BHFeatureRegistry:
             if feature_id < 0:
                 raise ValueError("Feature IDs cannot be negative.")
 
-            if name in new_features:
-                raise ValueError("Duplicate feature name.")
-
-            if feature_id in new_reverse:
-                raise ValueError("Duplicate feature ID.")
+            if name in new_features or feature_id in new_reverse:
+                raise ValueError("Duplicate feature name or ID.")
 
             new_features[name] = feature_id
             new_reverse[feature_id] = name
@@ -241,6 +213,7 @@ class BHFeatureRegistry:
 
         self.features = new_features
         self.reverse_features = new_reverse
+        self.next_id = next_id
         self.file_path = target
 
         return True
@@ -248,10 +221,7 @@ class BHFeatureRegistry:
     def stats(self):
         return {
             "registered_features": len(self.features),
-            "next_available_id": max(
-                self.reverse_features,
-                default=-1
-            ) + 1,
+            "next_available_id": self.next_id,
             "fixed_capacity": None,
             "storage_type": "sparse"
         }
@@ -259,4 +229,5 @@ class BHFeatureRegistry:
     def clear(self):
         self.features.clear()
         self.reverse_features.clear()
+        self.next_id = 0
         return True
