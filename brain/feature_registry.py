@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 class BHFeatureRegistry:
-    """Register sparse features with stable, non-reused IDs."""
+    """Manage sparse features with stable, non-reused IDs."""
 
     VERSION = 2
 
@@ -76,6 +76,7 @@ class BHFeatureRegistry:
         return self.reverse_features.get(feature_id)
 
     def encode_sparse(self, values):
+        """Convert named features into sparse ID-to-value data."""
         if not isinstance(values, dict):
             raise TypeError("values must be a dictionary.")
 
@@ -92,6 +93,7 @@ class BHFeatureRegistry:
         return result
 
     def decode_sparse(self, vector):
+        """Convert sparse IDs back into named features."""
         if not isinstance(vector, dict):
             raise TypeError("vector must be a dictionary.")
 
@@ -124,6 +126,7 @@ class BHFeatureRegistry:
         return True
 
     def save(self, path=None):
+        """Save registry data and preserve the next available ID."""
         target = Path(path) if path else self.file_path
 
         if target is None:
@@ -161,6 +164,7 @@ class BHFeatureRegistry:
                 temp_path.unlink()
 
     def load(self, path=None):
+        """Load registry data while preserving stable feature IDs."""
         target = Path(path) if path else self.file_path
 
         if target is None:
@@ -227,7 +231,7 @@ class BHFeatureRegistry:
         }
 
     def clear(self):
+        """Remove all features without reusing previously allocated IDs."""
         self.features.clear()
         self.reverse_features.clear()
-        self.next_id = 0
         return True
