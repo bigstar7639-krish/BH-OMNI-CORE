@@ -1,10 +1,11 @@
 
 """BH-OMNI CORE: Rule-based multilingual semantic signal extractor.
 
-This is an experimental prototype, not a trained language model.
+Experimental prototype. This is not a trained language model.
 """
 
 import unicodedata
+import re
 
 
 class BHSemanticFeatureEngine:
@@ -12,46 +13,27 @@ class BHSemanticFeatureEngine:
 
     LEXICONS = {
         "negation": {
-            "not",
-            "no",
-            "never",
-            "don't",
-            "cannot",
-            "இல்லை",
-            "வேண்டாம்",
-            "முடியாது",
+            "not", "no", "never", "don't", "cannot",
+            "இல்லை", "வேண்டாம்", "முடியாது",
             "பிடிக்கவில்லை",
         },
         "positive": {
-            "good",
-            "great",
-            "happy",
-            "love",
-            "excellent",
-            "நல்ல",
-            "நன்று",
-            "மகிழ்ச்சி",
-            "பிடிக்கும்",
+            "good", "great", "happy", "love", "excellent",
+            "நல்ல", "நன்று", "மகிழ்ச்சி", "பிடிக்கும்",
         },
         "negative": {
-            "bad",
-            "sad",
-            "hate",
-            "angry",
-            "terrible",
-            "கெட்ட",
-            "சோகம்",
-            "பிடிக்கவில்லை",
-            "கோபம்",
+            "bad", "sad", "hate", "angry", "terrible",
+            "கெட்ட", "சோகம்", "பிடிக்கவில்லை", "கோபம்",
         },
         "urgency": {
-            "urgent",
-            "emergency",
-            "immediately",
-            "asap",
-            "அவசரம்",
-            "உடனே",
+            "urgent", "emergency", "immediately", "asap",
+            "அவசரம்", "உடனே",
         },
+    }
+
+    SCOPE_NEGATIONS = {
+        "not", "no", "never", "don't", "cannot",
+        "இல்லை", "வேண்டாம்", "முடியாது",
     }
 
     def __init__(self):
@@ -63,6 +45,11 @@ class BHSemanticFeatureEngine:
             for name, words in self.LEXICONS.items()
         }
 
+        self.scope_negations = {
+            unicodedata.normalize("NFC", word).casefold()
+            for word in self.SCOPE_NEGATIONS
+        }
+
     @staticmethod
     def _validate(text):
         if not isinstance(text, str):
@@ -70,9 +57,7 @@ class BHSemanticFeatureEngine:
 
     @staticmethod
     def _normalize(text):
-        return unicodedata.normalize(
-            "NFC", text
-        ).casefold().strip()
+        return unicodedata.normalize("NFC", text).casefold().strip()
 
     @staticmethod
     def _tokenize(text):
@@ -84,10 +69,8 @@ class BHSemanticFeatureEngine:
 
             if category.startswith(("L", "N")):
                 current.append(char)
-
             elif category.startswith("M") and current:
                 current.append(char)
-
             else:
                 if current:
                     tokens.append("".join(current))
@@ -98,55 +81,84 @@ class BHSemanticFeatureEngine:
 
         return tokens
 
+    @staticmethod
+    def _split_sentences(text):
+        # Preserve sentence boundaries before tokenization.
+        return [
+            part.strip()
+            for part in re.split(r"[.!?।\n]+", text)
+            if part.strip()
+        ]
+
     def extract(self, text):
         self._validate(text)
-
         normalized = self._normalize(text)
-        tokens = self._tokenize(normalized)
 
-        if not tokens:
-            return {
-                "question_signal": 0.0,
-                "negation_signal": 0.0,
-                "sentiment_signal": 0.0,
-                "urgency_signal": 0.0,
-                "token_count": 0,
-            }
+        sentences = self._split_sentences(normalized)
+        all_tokens = []
 
-        token_set = set(tokens)
+        positive_count = 0
+        negative_count = 0
+
+        positive_words = self.lexicons["positive"]
+        negative_words = self.lexicons["negative"]
+
+        for sentence in sentences:
+            tokens = self._tokenize(sentence)
+            all_tokens.extend(tokens)
+
+            for index, token in enumerate(tokens):
+                is_positive = token in positive_words
+                is_negative = token in negative_words
+
+                if not is_positive and not is_negative:
+                    continue
+
+                is_self_negative = (
+                    is_negative
+                    and token in self.lexicons["negation"]
+                )
+
+                has_nearby_negation = (
+                    index > 0
+                    and tokens[index - 1] in self.scope_negations
+                )
+
+                if has_nearby_negation and not is_self_negative:
+                    if is_positive:
+                        negative_count += 1
+                    else:
+                        positive_count += 1
+                else:
+                    if is_positive:
+                        positive_count += 1
+                    if is_negative:
+                        negative_count += 1
+
+        token_set = set(all_tokens)
 
         negation = bool(
             token_set & self.lexicons["negation"]
-        )
-
-        positive_count = len(
-            token_set & self.lexicons["positive"]
-        )
-
-        negative_count = len(
-            token_set & self.lexicons["negative"]
         )
 
         urgency = bool(
             token_set & self.lexicons["urgency"]
         )
 
+        total_sentiment = positive_count + negative_count
+
         sentiment = 0.0
-
-        total_sentiment_words = (
-            positive_count + negative_count
-        )
-
-        if total_sentiment_words:
+        if total_sentiment:
             sentiment = (
                 positive_count - negative_count
-            ) / total_sentiment_words
+            ) / total_sentiment
 
         question = (
             "?" in text
-            or "என்ன" in normalized
-            or "ஏன்" in normalized
-            or "எப்படி" in normalized
+            or any(
+                word in normalized
+                for word in ("என்ன", "ஏன்", "எப்படி")
+            )
         )
 
         return {
@@ -154,7 +166,7 @@ class BHSemanticFeatureEngine:
             "negation_signal": float(negation),
             "sentiment_signal": round(sentiment, 4),
             "urgency_signal": float(urgency),
-            "token_count": len(tokens),
+            "token_count": len(all_tokens),
         }
 
     def reset(self):
@@ -166,11 +178,12 @@ if __name__ == "__main__":
 
     samples = [
         "I am happy",
-        "I do not like this",
-        "This is urgent",
-        "தமிழ் மொழி அழகானது",
+        "I am not happy",
+        "This is bad",
+        "This is not bad",
+        "I am not happy. I am good",
+        "Not bad. Great",
         "எனக்கு இது பிடிக்கவில்லை",
-        "இது என்ன?",
     ]
 
     for sample in samples:
