@@ -7,45 +7,58 @@ from pathlib import Path
 class BHTokenizer:
     """Unicode-aware tokenizer for multilingual text experiments."""
 
-    SPECIAL_TOKENS = [
-        "<PAD>",
-        "<UNK>",
-        "<START>",
-        "<END>"
-    ]
+    SPECIAL_TOKENS = ["<PAD>", "<UNK>", "<START>", "<END>"]
+
+    NO_SPACE_SCRIPTS = (
+        "THAI", "LAO", "KHMER", "MYANMAR",
+        "HIRAGANA", "KATAKANA", "HANGUL",
+        "CJK UNIFIED IDEOGRAPH"
+    )
 
     def __init__(self, vocab_path="brain/vocab.json"):
         self.vocab_path = Path(vocab_path)
-
         self.vocab = {
             token: index
             for index, token in enumerate(self.SPECIAL_TOKENS)
         }
-
         self.reverse_vocab = {
-            index: token
-            for token, index in self.vocab.items()
+            index: token for token, index in self.vocab.items()
         }
 
         if self.vocab_path.exists():
             self.load()
 
     @staticmethod
-    def _is_mark(character):
-        return unicodedata.category(character).startswith("M")
+    def _category(char):
+        return unicodedata.category(char)
 
     @staticmethod
-    def _is_letter(character):
-        return unicodedata.category(character).startswith("L")
+    def _is_mark(char):
+        return unicodedata.category(char).startswith("M")
 
     @staticmethod
-    def _is_number(character):
-        return unicodedata.category(character).startswith("N")
+    def _is_letter(char):
+        return unicodedata.category(char).startswith("L")
 
     @staticmethod
-    def _is_cjk_ideograph(character):
-        code = ord(character)
+    def _is_number(char):
+        return unicodedata.category(char).startswith("N")
 
+    @staticmethod
+    def _is_joiner(char):
+        return char in ("\u200c", "\u200d")
+
+    @staticmethod
+    def _is_variation_selector(char):
+        code = ord(char)
+        return (
+            0xFE00 <= code <= 0xFE0F
+            or 0xE0100 <= code <= 0xE01EF
+        )
+
+    @staticmethod
+    def _is_cjk_ideograph(char):
+        code = ord(char)
         return (
             0x3400 <= code <= 0x4DBF
             or 0x4E00 <= code <= 0x9FFF
@@ -53,36 +66,14 @@ class BHTokenizer:
             or 0x20000 <= code <= 0x2FA1F
         )
 
-    @staticmethod
-    def _is_joiner(character):
-        return character in ("\u200c", "\u200d")
-
-    @staticmethod
-    def _is_variation_selector(character):
-        code = ord(character)
-
-        return (
-            0xFE00 <= code <= 0xFE0F
-            or 0xE0100 <= code <= 0xE01EF
-        )
+    @classmethod
+    def _script_name(cls, char):
+        return unicodedata.name(char, "").split(" ")[0]
 
     @classmethod
-    def _is_word_character(cls, character):
-        return (
-            cls._is_letter(character)
-            or cls._is_mark(character)
-            or cls._is_number(character)
-        )
-
-    @classmethod
-    def _append_word_character(cls, current, character):
-        if cls._is_mark(character):
-            return bool(current)
-
-        if cls._is_joiner(character):
-            return bool(current)
-
-        return cls._is_word_character(character)
+    def _is_cluster_script(cls, char):
+        name = unicodedata.name(char, "")
+        return any(script in name for script in cls.NO_SPACE_SCRIPTS)
 
     @classmethod
     def tokenize(cls, text):
@@ -90,92 +81,115 @@ class BHTokenizer:
             raise TypeError("Text must be a string.")
 
         text = unicodedata.normalize("NFC", text).casefold()
-
         tokens = []
         current = []
-        index = 0
+        cluster = []
 
-        def flush():
+        def flush_word():
             if current:
                 tokens.append("".join(current))
                 current.clear()
 
+        def flush_cluster():
+            if cluster:
+                tokens.append("".join(cluster))
+                cluster.clear()
+
+        index = 0
+
         while index < len(text):
-            character = text[index]
+            char = text[index]
 
-            # Preserve known special-token syntax.
-            if character == "<":
+            if char == "<":
                 end = text.find(">", index + 1)
-
                 if end != -1:
                     candidate = text[index:end + 1]
-
                     if (
                         candidate in cls.SPECIAL_TOKENS
                         or (
-                            candidate.startswith("<")
-                            and candidate.endswith(">")
-                            and len(candidate) > 2
+                            len(candidate) > 2
                             and not any(c.isspace() for c in candidate)
                         )
                     ):
-                        flush()
+                        flush_cluster()
+                        flush_word()
                         tokens.append(candidate)
                         index = end + 1
                         continue
 
-            # Whitespace separates tokens.
-            if character.isspace():
-                flush()
+            if char.isspace():
+                flush_cluster()
+                flush_word()
                 index += 1
                 continue
 
-            # CJK ideographs are separated individually.
-            # This is a basic fallback, not dictionary-based word segmentation.
-            if cls._is_cjk_ideograph(character):
-                flush()
-                tokens.append(character)
+            if cls._is_cjk_ideograph(char):
+                flush_cluster()
+                flush_word()
+                tokens.append(char)
                 index += 1
                 continue
 
-            # Letters, numbers and combining marks.
-            if cls._append_word_character(current, character):
-                current.append(character)
+            if cls._is_cluster_script(char):
+                flush_word()
+
+                if cls._is_letter(char):
+                    flush_cluster()
+                    cluster.append(char)
+                elif cls._is_mark(char) or cls._is_joiner(char):
+                    if cluster:
+                        cluster.append(char)
+                    else:
+                        tokens.append(char)
+                else:
+                    flush_cluster()
+                    tokens.append(char)
+
                 index += 1
                 continue
 
-            # Apostrophes are retained inside words.
-            if character in ("'", "’") and current:
-                next_index = index + 1
+            if cls._is_mark(char) or cls._is_joiner(char):
+                if current:
+                    current.append(char)
+                elif cluster:
+                    cluster.append(char)
+                else:
+                    tokens.append(char)
+                index += 1
+                continue
 
+            if cls._is_letter(char) or cls._is_number(char):
+                flush_cluster()
+                current.append(char)
+                index += 1
+                continue
+
+            if char in ("'", "’") and current:
                 if (
-                    next_index < len(text)
-                    and cls._is_letter(text[next_index])
+                    index + 1 < len(text)
+                    and cls._is_letter(text[index + 1])
                 ):
-                    current.append(character)
+                    current.append(char)
                     index += 1
                     continue
 
-            # Keep emoji variation selectors and joined emoji sequences.
-            if (
-                cls._is_variation_selector(character)
-                or cls._is_joiner(character)
-            ):
+            if cls._is_variation_selector(char):
                 if current:
-                    current.append(character)
+                    current.append(char)
+                elif cluster:
+                    cluster.append(char)
                 else:
-                    flush()
-                    tokens.append(character)
-
+                    tokens.append(char)
                 index += 1
                 continue
 
-            # Other symbols and punctuation become separate tokens.
-            flush()
-            tokens.append(character)
+            flush_cluster()
+            flush_word()
+            tokens.append(char)
             index += 1
 
-        flush()
+        flush_cluster()
+        flush_word()
         return tokens
 
     def learn(self, text):
@@ -184,7 +198,6 @@ class BHTokenizer:
         for token in tokens:
             if token not in self.vocab:
                 token_id = max(self.reverse_vocab.keys()) + 1
-
                 self.vocab[token] = token_id
                 self.reverse_vocab[token_id] = token
 
@@ -193,26 +206,22 @@ class BHTokenizer:
     def learn_batch(self, texts):
         if not isinstance(texts, (list, tuple)):
             raise TypeError("texts must be a list or tuple.")
-
-        return [
-            self.learn(text)
-            for text in texts
-        ]
+        return [self.learn(text) for text in texts]
 
     def encode(self, text, add_special_tokens=False):
-        token_ids = [
+        ids = [
             self.vocab.get(token, self.vocab["<UNK>"])
             for token in self.tokenize(text)
         ]
 
         if add_special_tokens:
-            token_ids = (
+            ids = (
                 [self.vocab["<START>"]]
-                + token_ids
+                + ids
                 + [self.vocab["<END>"]]
             )
 
-        return token_ids
+        return ids
 
     def decode(self, token_ids, skip_special_tokens=True):
         if not isinstance(token_ids, (list, tuple)):
@@ -226,10 +235,7 @@ class BHTokenizer:
             except (TypeError, ValueError, OverflowError):
                 token = "<UNK>"
             else:
-                token = self.reverse_vocab.get(
-                    token_id,
-                    "<UNK>"
-                )
+                token = self.reverse_vocab.get(token_id, "<UNK>")
 
             if skip_special_tokens and token in self.SPECIAL_TOKENS:
                 continue
@@ -237,200 +243,100 @@ class BHTokenizer:
             tokens.append(token)
 
         result = ""
-
-        closing_punctuation = {
+        closing = {
             ".", ",", "!", "?", ";", ":", "%",
             ")", "]", "}", "…", "。", "、",
             "！", "？", "，", "；", "："
         }
-
-        opening_punctuation = {
-            "(", "[", "{", "（", "「", "『"
-        }
-
-        no_space_scripts = (
-            "CJK UNIFIED IDEOGRAPH",
-            "HIRAGANA",
-            "KATAKANA",
-            "HANGUL",
-            "THAI",
-            "LAO",
-            "KHMER",
-            "MYANMAR"
-        )
+        opening = {"(", "[", "{", "（", "「", "『"}
 
         for token in tokens:
             if not result:
                 result = token
                 continue
 
-            if token in closing_punctuation:
+            if token in closing or result[-1:] in opening:
                 result += token
                 continue
 
-            if result[-1:] in opening_punctuation:
-                result += token
-                continue
+            previous = unicodedata.name(result[-1], "")
+            current = unicodedata.name(token[0], "")
 
-            previous_name = unicodedata.name(
-                result[-1],
-                ""
+            no_space = any(
+                script in previous or script in current
+                for script in self.NO_SPACE_SCRIPTS
             )
 
-            current_name = unicodedata.name(
-                token[0],
-                ""
-            )
-
-            previous_no_space = any(
-                script in previous_name
-                for script in no_space_scripts
-            )
-
-            current_no_space = any(
-                script in current_name
-                for script in no_space_scripts
-            )
-
-            if previous_no_space or current_no_space:
-                result += token
-            else:
-                result += " " + token
+            result += token if no_space else " " + token
 
         return result
 
     def batch_encode(self, texts):
         if not isinstance(texts, (list, tuple)):
             raise TypeError("texts must be a list or tuple.")
-
-        return [
-            self.encode(text)
-            for text in texts
-        ]
+        return [self.encode(text) for text in texts]
 
     def save(self, path=None):
         target = Path(path) if path else self.vocab_path
+        target.parent.mkdir(parents=True, exist_ok=True)
 
-        target.parent.mkdir(
-            parents=True,
-            exist_ok=True
-        )
-
-        data = {
-            "version": 1,
-            "vocab": self.vocab
-        }
-
-        temp_path = target.with_suffix(
-            target.suffix + ".tmp"
-        )
+        data = {"version": 1, "vocab": self.vocab}
+        temp = target.with_suffix(target.suffix + ".tmp")
 
         try:
-            with open(
-                temp_path,
-                "w",
-                encoding="utf-8"
-            ) as file:
-                json.dump(
-                    data,
-                    file,
-                    ensure_ascii=False,
-                    indent=2
-                )
-
-            temp_path.replace(target)
-
+            with temp.open("w", encoding="utf-8") as file:
+                json.dump(data, file, ensure_ascii=False, indent=2)
+                file.flush()
+            temp.replace(target)
         finally:
-            if temp_path.exists():
-                temp_path.unlink()
+            if temp.exists():
+                temp.unlink()
 
         return True
 
     def load(self, path=None):
         target = Path(path) if path else self.vocab_path
 
-        with open(target, "r", encoding="utf-8") as file:
+        with target.open("r", encoding="utf-8") as file:
             data = json.load(file)
 
         if not isinstance(data, dict):
             raise ValueError("Invalid vocabulary format.")
 
         vocab = data.get("vocab", data)
-
         if not isinstance(vocab, dict):
             raise ValueError("Invalid vocabulary format.")
 
-        loaded_vocab = {}
+        loaded = {}
 
         for token, token_id in vocab.items():
             if not isinstance(token, str) or not token:
                 raise ValueError("Invalid token.")
-
-            if isinstance(token_id, bool) or not isinstance(
-                token_id, int
-            ):
+            if isinstance(token_id, bool) or not isinstance(token_id, int):
                 raise ValueError("Token IDs must be integers.")
-
             if token_id < 0:
                 raise ValueError("Token IDs cannot be negative.")
+            loaded[token] = token_id
 
-            loaded_vocab[token] = token_id
-
-        if len(set(loaded_vocab.values())) != len(loaded_vocab):
+        if len(set(loaded.values())) != len(loaded):
             raise ValueError("Duplicate token IDs found.")
 
-        # Existing special-token IDs must remain stable.
         for index, token in enumerate(self.SPECIAL_TOKENS):
-            if token in loaded_vocab and loaded_vocab[token] != index:
-                raise ValueError(
-                    f"Invalid ID for special token: {token}"
-                )
-
-        next_id = max(loaded_vocab.values(), default=-1) + 1
+            if token in loaded and loaded[token] != index:
+                raise ValueError("Invalid special-token ID.")
 
         for index, token in enumerate(self.SPECIAL_TOKENS):
-            if token not in loaded_vocab:
-                loaded_vocab[token] = index
+            loaded.setdefault(token, index)
 
-        if len(set(loaded_vocab.values())) != len(loaded_vocab):
+        if len(set(loaded.values())) != len(loaded):
             raise ValueError("Special token ID conflict.")
 
-        self.vocab = loaded_vocab
-
+        self.vocab = loaded
         self.reverse_vocab = {
-            token_id: token
-            for token, token_id in self.vocab.items()
+            token_id: token for token, token_id in loaded.items()
         }
-
         self.vocab_path = target
         return True
 
     def vocabulary_size(self):
         return len(self.vocab)
-
-
-if __name__ == "__main__":
-    brain = BHTokenizer()
-
-    samples = [
-        "Hello! BH OMNI CORE.",
-        "வணக்கம் தமிழ் உலகம்",
-        "नमस्ते दुनिया",
-        "مرحبا بالعالم",
-        "你好世界",
-        "こんにちは世界",
-        "안녕하세요 세계",
-        "Привет мир"
-    ]
-
-    for sample in samples:
-        brain.learn(sample)
-        print("Input:", sample)
-        print("Tokens:", brain.tokenize(sample))
-        print("Decoded:", brain.decode(brain.encode(sample)))
-        print()
-
-    brain.save()
-
-    print("Vocabulary size:", brain.vocabulary_size())
-    print("BH-OMNI CORE multilingual tokenizer ready!")
