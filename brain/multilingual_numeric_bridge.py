@@ -1,49 +1,64 @@
 
-import math
+import unittest
 
-from brain.text_feature_engine import BHTextFeatureEngine
-from brain.numeric_brain import BHNumericBrain
+from brain.multilingual_numeric_bridge import (
+    BHMultilingualNumericBridge
+)
 
 
-class BHMultilingualNumericBridge:
-    """Connects text features to dynamically allocated numeric features."""
+class TestMultilingualNumericBridge(unittest.TestCase):
 
-    def __init__(self):
-        self.text_engine = BHTextFeatureEngine()
-        self.numeric_brain = BHNumericBrain()
+    def setUp(self):
+        self.bridge = BHMultilingualNumericBridge()
 
-    def encode_text(self, text):
-        if not isinstance(text, str):
-            raise TypeError("Text must be a string")
+    def test_english_text(self):
+        result = self.bridge.encode_text("Hello world")
+        self.assertEqual(len(result), 4)
+        self.assertTrue(all(isinstance(v, float) for v in result.values()))
 
-        if not text.strip():
-            raise ValueError("Text cannot be empty")
+    def test_tamil_text(self):
+        result = self.bridge.encode_text("வணக்கம் உலகம்")
+        self.assertEqual(len(result), 4)
 
-        features = self.text_engine.text_to_features(text)
+    def test_hindi_text(self):
+        result = self.bridge.encode_text("नमस्ते दुनिया")
+        self.assertEqual(len(result), 4)
 
-        if not isinstance(features, (list, tuple)):
-            raise ValueError("Text engine must return a list or tuple")
+    def test_japanese_text(self):
+        result = self.bridge.encode_text("こんにちは世界")
+        self.assertEqual(len(result), 4)
 
-        self.numeric_brain.clear()
+    def test_dynamic_feature_ids(self):
+        result = self.bridge.encode_text("Hello world")
+        self.assertEqual(list(result.keys()), [0, 1, 2, 3])
 
-        for value in features:
-            try:
-                number = float(value)
-            except (TypeError, ValueError, OverflowError):
-                raise ValueError("Invalid numerical text feature")
+    def test_new_text_replaces_previous_vector(self):
+        self.bridge.encode_text("Hello")
+        result = self.bridge.encode_text("வணக்கம்")
 
-            if not math.isfinite(number):
-                raise ValueError("Text feature must be finite")
+        self.assertEqual(len(result), 4)
+        self.assertEqual(
+            self.bridge.numeric_brain.get_feature_count(),
+            4
+        )
 
-            feature_id = self.numeric_brain.add_feature(number)
+    def test_invalid_input(self):
+        with self.assertRaises(TypeError):
+            self.bridge.encode_text(123)
 
-            if feature_id is None:
-                raise ValueError("Could not allocate numeric feature")
+    def test_empty_input(self):
+        with self.assertRaises(ValueError):
+            self.bridge.encode_text("")
 
-        return self.numeric_brain.get_vector()
+    def test_reset(self):
+        self.bridge.encode_text("Hello world")
+        self.bridge.reset()
 
-    def get_numeric_brain(self):
-        return self.numeric_brain
+        self.assertEqual(
+            self.bridge.numeric_brain.get_feature_count(),
+            0
+        )
 
-    def reset(self):
-        self.numeric_brain.clear()
+
+if __name__ == "__main__":
+    unittest.main()
