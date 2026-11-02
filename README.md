@@ -20,6 +20,7 @@ BH-OMNI CORE is an experimental, modular Python AI foundation. It provides indep
 - Sparse numerical feature operations.
 - Dynamically allocated numerical feature IDs.
 - Feature registry with persistent IDs and JSON storage.
+- Experimental rule-based semantic feature extraction.
 - Automated unit tests and health checks.
 
 ## Requirements
@@ -29,7 +30,7 @@ BH-OMNI CORE is an experimental, modular Python AI foundation. It provides indep
 
 ## Run Tests
 
-Run from the repository root:
+Run these commands from the repository root:
 
 ```bash
 python -m compileall -q brain tests
@@ -38,6 +39,21 @@ python -m brain.test_brain
 python -m unittest brain.test_brain_core -v
 python -m brain.health_check
 python -m brain.multilingual_health_check
+python -m brain.semantic_health_check
+```
+
+## GitHub Actions
+
+Automated tests run through GitHub Actions on:
+
+- Pushes to the `main` branch.
+- Pull requests targeting `main`.
+- Manual workflow dispatch.
+
+Workflow file:
+
+```text
+.github/workflows/brain-tests.yml
 ```
 
 ## Project Structure
@@ -49,7 +65,11 @@ BH-OMNI-CORE/
 │   ├── feature_registry.py
 │   ├── language_analyzer.py
 │   ├── multilingual_pipeline.py
+│   ├── multilingual_numeric_bridge.py
+│   ├── semantic_feature_engine.py
+│   ├── semantic_health_check.py
 │   ├── numeric_brain.py
+│   ├── text_feature_engine.py
 │   ├── text_relevance_engine.py
 │   └── ...
 ├── tests/
@@ -57,6 +77,35 @@ BH-OMNI-CORE/
 │   └── workflows/
 └── README.md
 ```
+
+## Semantic Feature Engine
+
+BH-OMNI CORE includes an experimental rule-based semantic feature engine.
+
+### Current Features
+
+- Basic positive and negative sentiment signals.
+- English and selected Tamil negation detection.
+- Basic urgency detection.
+- Basic question detection.
+- Sentence boundary handling.
+- Unicode normalization.
+- Tamil and English mixed-text support.
+
+### Output Signals
+
+- `question_signal`
+- `negation_signal`
+- `sentiment_signal`
+- `urgency_signal`
+- `token_count`
+
+### Current Limitations
+
+- Uses predefined word lists, not a trained language model.
+- Does not understand every language or sentence structure.
+- Negation handling is limited to nearby words.
+- Does not provide reliable translation or deep contextual understanding.
 
 ## Important Limitations
 
@@ -74,31 +123,3 @@ BH-OMNI-CORE/
 ## Project Status
 
 BH-OMNI CORE is an experimental foundation for further development. Its components are modular and testable, but it is not yet a trained general-purpose AI system.
-
-## Semantic Feature Engine
-
-BH-OMNI CORE includes an experimental rule-based semantic feature engine.
-
-### Current Features
-- Basic positive and negative sentiment signals
-- English and selected Tamil negation detection
-- Basic urgency detection
-- Basic question detection
-- Sentence boundary handling
-- Unicode normalization
-- Tamil and English mixed-text support
-
-### Current Limitations
-- Uses predefined word lists, not a trained language model.
-- Does not understand every language or sentence structure.
-- Negation handling is limited to nearby words.
-- Does not provide reliable translation or deep contextual understanding.
-
-### Output Signals
-- question_signal
-- negation_signal
-- sentiment_signal
-- urgency_signal
-- token_count
-
-This module is an experimental component of BH-OMNI CORE.
