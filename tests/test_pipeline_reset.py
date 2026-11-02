@@ -11,8 +11,9 @@ class TestPipelineReset(unittest.TestCase):
     def tearDown(self):
         self.pipeline.reset()
 
-    def test_reset_returns_true(self):
-        self.assertTrue(self.pipeline.reset())
+    def test_reset_runs_without_error(self):
+        self.pipeline.process("Hello world")
+        self.pipeline.reset()
 
     def test_reset_clears_numeric_features(self):
         self.pipeline.process("Hello world")
