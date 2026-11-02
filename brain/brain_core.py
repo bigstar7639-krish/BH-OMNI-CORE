@@ -8,6 +8,7 @@ from brain.network_manager import BHNetworkManager
 from brain.predictive_engine import PredictiveEngine
 from brain.memory_engine import BHMemory
 from brain.text_network import BHTextNetwork
+from brain.multilingual_pipeline import BHMultilingualPipeline
 
 
 class BlackHoleBrain:
@@ -39,8 +40,12 @@ class BlackHoleBrain:
         self.user_memory_dir = Path(user_memory_dir)
 
         self.network_manager = BHNetworkManager()
-        self.predictive_engine = PredictiveEngine(knowledge_engine)
+        self.predictive_engine = PredictiveEngine(
+            knowledge_engine
+        )
+
         self.text_network = BHTextNetwork()
+        self.multilingual_pipeline = BHMultilingualPipeline()
 
         self.network_manager.register(
             name="text",
@@ -136,6 +141,14 @@ class BlackHoleBrain:
 
         return self.predictive_engine.prepare(typed_text)
 
+    # Multilingual processing
+    def process_multilingual_text(self, text):
+        return self.multilingual_pipeline.process(text)
+
+    def reset_multilingual_pipeline(self):
+        self.multilingual_pipeline.reset()
+        return True
+
     # Memory operations
     def remember_for_user(
         self,
@@ -201,7 +214,6 @@ class BlackHoleBrain:
         if not isinstance(text, str):
             return set()
 
-        # Unicode-aware tokenization supports Tamil and other scripts.
         words = re.findall(
             r"[^\W_]+",
             text.casefold(),
@@ -226,7 +238,6 @@ class BlackHoleBrain:
         if not question_words or not isinstance(results, list):
             return []
 
-        # Require a meaningful proportion of question-word overlap.
         minimum_overlap = max(
             1,
             math.ceil(len(question_words) * 0.25)
@@ -244,15 +255,19 @@ class BlackHoleBrain:
                 str(item.get("category", ""))
             ))
 
-            entry_words = cls._meaningful_words(searchable_text)
-            overlap = len(question_words.intersection(entry_words))
+            entry_words = cls._meaningful_words(
+                searchable_text
+            )
+
+            overlap = len(
+                question_words.intersection(entry_words)
+            )
 
             if overlap >= minimum_overlap:
                 scored_results.append(
                     (overlap, index, item)
                 )
 
-        # Higher overlap first; preserve original order for ties.
         scored_results.sort(
             key=lambda result: (-result[0], result[1])
         )
@@ -262,7 +277,7 @@ class BlackHoleBrain:
             for _, _, item in scored_results
         ]
 
-    # Build extractive answer from shared knowledge only
+    # Build extractive answer
     @staticmethod
     def _build_answer(question, knowledge_results):
         if not knowledge_results:
@@ -316,7 +331,18 @@ class BlackHoleBrain:
                 "message": str(error)
             }
 
-        # Retrieve shared knowledge
+        # Multilingual processing
+        try:
+            multilingual_result = (
+                self.multilingual_pipeline.process(question)
+            )
+        except (TypeError, ValueError) as error:
+            return {
+                "status": "error",
+                "message": f"Multilingual processing failed: {error}"
+            }
+
+        # Shared knowledge retrieval
         prediction = self.predictive_engine.get_on_send(
             question
         )
@@ -327,19 +353,18 @@ class BlackHoleBrain:
             else []
         )
 
-        # Filter unrelated results
         knowledge_results = self._filter_relevant_knowledge(
             question,
             raw_knowledge_results
         )
 
-        # Retrieve personal memories separately.
+        # Personal memory retrieval
         relevant_memories = user_memory.recall(
             keyword=question,
             limit=10
         )
 
-        # Run neural networks
+        # Neural network execution
         if network_inputs is not None:
             network_results = (
                 self.network_manager.run_active_networks(
@@ -363,7 +388,7 @@ class BlackHoleBrain:
                     )
                 )
 
-        # Build answer using shared knowledge only.
+        # Grounded answer generation
         answer = self._build_answer(
             question,
             knowledge_results
@@ -382,6 +407,15 @@ class BlackHoleBrain:
             "knowledge_results": knowledge_results,
             "relevant_user_memories": relevant_memories,
             "network_results": network_results,
+            "multilingual_analysis": (
+                multilingual_result["script_analysis"]
+            ),
+            "numeric_features": (
+                multilingual_result["numeric_features"]
+            ),
+            "numeric_feature_count": (
+                multilingual_result["feature_count"]
+            ),
             "answer_type": "extractive"
         }
 
@@ -401,5 +435,8 @@ class BlackHoleBrain:
             ),
             "users_with_memory": len(
                 self.user_memories
+            ),
+            "multilingual_pipeline": (
+                self.multilingual_pipeline is not None
             )
         }
