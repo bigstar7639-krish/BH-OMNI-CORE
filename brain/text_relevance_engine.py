@@ -1,14 +1,13 @@
 
-"""BH-OMNI CORE: Lightweight text relevance engine."""
+"""BH-OMNI CORE: Unicode-aware text relevance engine."""
 
 import math
-import re
 import unicodedata
 from collections import Counter
 
 
 class BHTextRelevanceEngine:
-    """Ranks text candidates using token and character similarity."""
+    """Ranks text candidates using Unicode-aware lexical similarity."""
 
     def tokenize(self, text):
         if not isinstance(text, str):
@@ -16,15 +15,41 @@ class BHTextRelevanceEngine:
 
         normalized = unicodedata.normalize("NFKC", text).casefold()
 
-        return re.findall(r"[^\W_]+", normalized, flags=re.UNICODE)
+        tokens = []
+        current = []
+
+        for char in normalized:
+            category = unicodedata.category(char)
+
+            # Letters, numbers and combining marks are retained.
+            if category.startswith("L") or category.startswith("N"):
+                current.append(char)
+
+            elif category.startswith("M") and current:
+                current.append(char)
+
+            else:
+                if current:
+                    tokens.append("".join(current))
+                    current = []
+
+        if current:
+            tokens.append("".join(current))
+
+        return tokens
 
     @staticmethod
     def _cosine_similarity(first, second):
         common = set(first) & set(second)
 
         dot = sum(first[key] * second[key] for key in common)
-        norm_first = math.sqrt(sum(value * value for value in first.values()))
-        norm_second = math.sqrt(sum(value * value for value in second.values()))
+
+        norm_first = math.sqrt(
+            sum(value * value for value in first.values())
+        )
+        norm_second = math.sqrt(
+            sum(value * value for value in second.values())
+        )
 
         if norm_first == 0 or norm_second == 0:
             return 0.0
@@ -35,7 +60,6 @@ class BHTextRelevanceEngine:
     def _jaccard_similarity(first, second):
         set_first = set(first)
         set_second = set(second)
-
         union = set_first | set_second
 
         if not union:
@@ -63,7 +87,6 @@ class BHTextRelevanceEngine:
             candidate_tokens
         )
 
-        # Weighted lexical relevance score.
         result = (0.7 * cosine) + (0.3 * jaccard)
 
         return round(max(0.0, min(result, 1.0)), 6)
