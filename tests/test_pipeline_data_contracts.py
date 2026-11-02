@@ -16,9 +16,9 @@ class TestPipelineDataContracts(unittest.TestCase):
         result = self.pipeline.process("Hello world")
         self.assertIsInstance(result["original_text"], str)
 
-    def test_numeric_features_are_list(self):
+    def test_numeric_features_are_dictionary(self):
         result = self.pipeline.process("Hello world")
-        self.assertIsInstance(result["numeric_features"], list)
+        self.assertIsInstance(result["numeric_features"], dict)
 
     def test_numeric_feature_count_matches(self):
         result = self.pipeline.process("Hello world")
@@ -26,6 +26,12 @@ class TestPipelineDataContracts(unittest.TestCase):
             result["feature_count"],
             len(result["numeric_features"]),
         )
+
+    def test_numeric_feature_values_are_numeric(self):
+        result = self.pipeline.process("Hello world")
+
+        for value in result["numeric_features"].values():
+            self.assertIsInstance(value, (int, float))
 
     def test_semantic_features_are_dictionary(self):
         result = self.pipeline.process("I am happy")
