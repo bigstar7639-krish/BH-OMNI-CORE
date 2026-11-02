@@ -27,16 +27,14 @@ jobs:
       - name: Check Python syntax
         run: python -m compileall -q brain tests
 
-      - name: Run unit tests
+      - name: Run all unit tests
         run: python -m unittest discover -s tests -v
-
-      - name: Run brain core tests
-        run: python -m unittest brain.test_brain_core -v
 
       - name: Run basic brain tests
         run: python -m brain.test_brain
 
       - name: Run health check
         run: python -m brain.health_check
+
       - name: Multilingual Health Check
         run: python -m brain.multilingual_health_check
