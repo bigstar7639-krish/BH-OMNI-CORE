@@ -21,9 +21,11 @@ class TestBrainCorePipeline(unittest.TestCase):
             "Earth is the third planet from the Sun."
         )
 
+        self.user_memory_dir = root / "users"
+
         self.brain = BlackHoleBrain(
             self.knowledge,
-            user_memory_dir=root / "users"
+            user_memory_dir=self.user_memory_dir
         )
 
     def tearDown(self):
@@ -132,6 +134,11 @@ class TestBrainCorePipeline(unittest.TestCase):
         self.assertEqual(first["answer"], second["answer"])
 
     def test_different_users_have_separate_memory_results(self):
+        self.brain.remember_for_user(
+            "user1",
+            "Earth is my favorite planet"
+        )
+
         first = self.brain.answer_request(
             "user1",
             "What is Earth?"
@@ -142,13 +149,54 @@ class TestBrainCorePipeline(unittest.TestCase):
             "What is Earth?"
         )
 
-        self.assertIsInstance(
-            first["relevant_user_memories"],
-            list
+        self.assertTrue(first["relevant_user_memories"])
+        self.assertEqual(second["relevant_user_memories"], [])
+
+    def test_answer_request_includes_matching_user_memory(self):
+        self.brain.remember_for_user(
+            "user1",
+            "Earth is my favorite planet",
+            category="personal"
         )
-        self.assertIsInstance(
-            second["relevant_user_memories"],
-            list
+
+        result = self.brain.answer_request(
+            "user1",
+            "What is Earth?"
+        )
+
+        self.assertEqual(result["status"], "answered")
+        self.assertTrue(result["relevant_user_memories"])
+
+        self.assertIn(
+            "Earth is my favorite planet",
+            [
+                item["text"]
+                for item in result["relevant_user_memories"]
+            ]
+        )
+
+    def test_user_memory_persists_across_brain_instances(self):
+        self.brain.remember_for_user(
+            "user1",
+            "I enjoy learning about Earth",
+            category="personal"
+        )
+
+        second_brain = BlackHoleBrain(
+            self.knowledge,
+            user_memory_dir=self.user_memory_dir
+        )
+
+        result = second_brain.answer_request(
+            "user1",
+            "What is Earth?"
+        )
+
+        self.assertTrue(
+            any(
+                item["text"] == "I enjoy learning about Earth"
+                for item in result["relevant_user_memories"]
+            )
         )
 
 
