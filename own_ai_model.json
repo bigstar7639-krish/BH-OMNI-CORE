@@ -1,9 +1,9 @@
 {
   "words": {
-    "test": 22,
+    "test": 26,
     "vanakkam": 4,
     "v2": 3,
-    "q": 16,
+    "q": 20,
     "eppadi": 1,
     "irukka": 2,
     "unakku": 3,
@@ -65,7 +65,7 @@
     "school": 1,
     "auto": 6,
     "q2": 3,
-    "final": 10,
+    "final": 14,
     "da": 1,
     "pannitu": 1,
     "semma": 1,
@@ -230,5 +230,5 @@
     "shopping": "Shopping-a? Expense-la add pannidu, kasu paathuko!",
     "online class": "Online class-a? Notes eduthuko da!"
   },
-  "count": 117
+  "count": 121
 }
