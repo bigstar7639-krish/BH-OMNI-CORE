@@ -223,6 +223,15 @@ def get_omni_memory(msg="memory"):
         return {"reply": f"Memory error: {ex}"}
 
 
+def get_omni_habit(msg="habits"):
+    try:
+        from omni_habit import handle_habit
+        r = handle_habit(msg)
+        if r is None:
+            r = "Habit illa da! 'habit add Exercise' nu add pannu!"
+        return {"reply": r, "source": "omni_habit.py - SAME PROJECT"}
+    except Exception as e:
+        return {"reply": f"Habit error: {e}", "source": "omni_habit.py"}
 def get_omni_daily(msg="daily"):
     try:
         from omni_daily import handle_daily
@@ -361,6 +370,9 @@ class H(SimpleHTTPRequestHandler):
             msg = parse_qs(urlparse(self.path).query).get("msg", ["memory"])[0]
             self.send_json(get_omni_memory(msg))
             return
+        if self.path.startswith("/api/omni_habit"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "habits"
+            self.send_json(get_omni_habit(msg))
         if self.path.startswith("/api/omni_daily"):
             msg = parse_qs(urlparse(self.path).query).get("msg", ["daily"])[0]
             self.send_json(get_omni_daily(msg))
