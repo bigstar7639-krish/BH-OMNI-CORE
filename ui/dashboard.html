@@ -42,6 +42,17 @@ async function sendStats(){
   hh.textContent='STATS: '+j.reply; hh.scrollTop=hh.scrollHeight;
 }
 </script></div>
+<div class="card"><b>💾 OMNI BACKUP - Phase 24 Step 2!</b><br><br>
+<div id="backupHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Backup Ready!</div><br>
+<button onclick="sendBackup()">Check Backup</button>
+<script>
+async function sendBackup(){
+  let hh=document.getElementById('backupHistory');
+  let r=await fetch('/api/omni_backup?msg='+encodeURIComponent('backup'));
+  let j=await r.json();
+  hh.textContent='BACKUP: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
 <div class="omni-orb-wrap"><div class="omni-orb"></div><div class="omni-orb-label">BH-OMNI CORE - Aurora Orb - CSS Animation Only</div></div>
 <h1>🌌 BH-OMNI CORE</h1>
 <p>Modular AI Ecosystem - Built on Phone - <b>Phase 8 - OMNI INFINITY V12 - SAME PROJECT!</b></p>

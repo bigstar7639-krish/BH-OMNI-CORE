@@ -232,6 +232,15 @@ def get_omni_briefing(msg="briefing"):
         return {"reply": r, "source": "omni_briefing.py - SAME PROJECT"}
     except Exception as e:
         return {"reply": f"Briefing error: {e}", "source": "omni_briefing.py"}
+def get_omni_backup(msg="backup"):
+    try:
+        from omni_backup import handle_backup
+        r = handle_backup(msg)
+        if r is None:
+            r = "Backup: 'backup' nu try pannu da!"
+        return {"reply": r, "source": "omni_backup.py - SAME PROJECT"}
+    except Exception as e:
+        return {"reply": f"Backup error: {e}", "source": "omni_backup.py"}
 def get_omni_stats(msg="stats"):
     try:
         from omni_stats import handle_stats
@@ -499,6 +508,9 @@ class H(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/omni_briefing"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "briefing"
             self.send_json(get_omni_briefing(msg))
+        if self.path.startswith("/api/omni_backup"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "backup"
+            self.send_json(get_omni_backup(msg))
         if self.path.startswith("/api/omni_stats"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "stats"
             self.send_json(get_omni_stats(msg))
