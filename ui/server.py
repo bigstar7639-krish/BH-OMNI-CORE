@@ -232,6 +232,15 @@ def get_omni_briefing(msg="briefing"):
         return {"reply": r, "source": "omni_briefing.py - SAME PROJECT"}
     except Exception as e:
         return {"reply": f"Briefing error: {e}", "source": "omni_briefing.py"}
+def get_omni_stt(msg="stt"):
+    try:
+        from omni_stt import handle_stt
+        r = handle_stt(msg)
+        if r is None:
+            r = "STT: 'stt' / 'stt listen' nu try pannu da!"
+        return {"reply": r, "source": "omni_stt.py - Voice to Text"}
+    except Exception as e:
+        return {"reply": f"STT error: {e}", "source": "omni_stt.py"}
 def get_omni_brain(msg="brain"):
     try:
         from omni_brain_full import handle_brain
@@ -589,6 +598,9 @@ class H(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/omni_briefing"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "briefing"
             self.send_json(get_omni_briefing(msg))
+        if self.path.startswith("/api/omni_stt"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "stt"
+            self.send_json(get_omni_stt(msg))
         if self.path.startswith("/api/omni_brain"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "brain"
             self.send_json(get_omni_brain(msg))

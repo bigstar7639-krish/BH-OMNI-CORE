@@ -201,6 +201,17 @@ async function sendBrainStatus(){
   hh.textContent+='\nBRAIN: '+j.reply; hh.scrollTop=hh.scrollHeight;
 }
 </script></div>
+<div class="card"><b>🎤 OMNI STT - Phase 39 Step 2! (Voice to Text)</b><br><br>
+<div id="sttHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">STT Ready! Phone mic venum.</div><br>
+<button onclick="sendSTT()">Check STT</button>
+<script>
+async function sendSTT(){
+  let hh=document.getElementById('sttHistory');
+  let r=await fetch('/api/omni_stt?msg='+encodeURIComponent('stt'));
+  let j=await r.json();
+  hh.textContent='STT: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
 <div class="omni-orb-wrap"><div class="omni-orb"></div><div class="omni-orb-label">BH-OMNI CORE - Aurora Orb - CSS Animation Only</div></div>
 <h1>🌌 BH-OMNI CORE</h1>
 <p>Modular AI Ecosystem - Built on Phone - <b>Phase 8 - OMNI INFINITY V12 - SAME PROJECT!</b></p>
