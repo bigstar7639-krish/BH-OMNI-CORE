@@ -232,6 +232,15 @@ def get_omni_briefing(msg="briefing"):
         return {"reply": r, "source": "omni_briefing.py - SAME PROJECT"}
     except Exception as e:
         return {"reply": f"Briefing error: {e}", "source": "omni_briefing.py"}
+def get_omni_emergency(msg="sos"):
+    try:
+        from omni_emergency import handle_emergency
+        r = handle_emergency(msg)
+        if r is None:
+            r = "Emergency illa da!"
+        return {"reply": r, "source": "omni_emergency.py - SAME PROJECT"}
+    except Exception as e:
+        return {"reply": f"Emergency error: {e}", "source": "omni_emergency.py"}
 def get_omni_travel(msg="trips"):
     try:
         from omni_travel import handle_travel
@@ -445,6 +454,9 @@ class H(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/omni_briefing"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "briefing"
             self.send_json(get_omni_briefing(msg))
+        if self.path.startswith("/api/omni_emergency"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "sos"
+            self.send_json(get_omni_emergency(msg))
         if self.path.startswith("/api/omni_travel"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "trips"
             self.send_json(get_omni_travel(msg))
