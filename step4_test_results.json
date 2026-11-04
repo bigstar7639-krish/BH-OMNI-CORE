@@ -1,0 +1,10 @@
+{
+  "test_generate_secret": "PASS",
+  "test_generate_verify_correct": "PASS",
+  "test_wrong_code_fails": "PASS",
+  "test_expired_code_fails": "PASS",
+  "test_invalid_secret_rejected": "PASS",
+  "test_backup_codes": "PASS",
+  "test_provisioning_uri": "PASS",
+  "test_failure_recovery_and_params": "PASS"
+}
