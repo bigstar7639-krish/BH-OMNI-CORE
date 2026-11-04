@@ -95,6 +95,30 @@ async function sendTTS(){
   hh.textContent+='\nTTS: '+j.reply; hh.scrollTop=hh.scrollHeight;
 }
 </script></div>
+<div class="card"><b>🧠 OWN AI - Phase 30 Step 2! (100% OWN, NO API)</b><br><br>
+<div id="ownAiHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Own AI Ready! Nee solli kodu, naan kathukiren!</div><br>
+<input id="ownAiInput" value="own ai" style="width:65%" onkeydown="if(event.key==='Enter')sendOwnAi()">
+<button onclick="sendOwnAi()">Ask Own AI</button><br><br>
+<input id="ownAiTeach" value="teach vanakkam | Vanakkam Krish!" style="width:65%" onkeydown="if(event.key==='Enter')teachOwnAi()">
+<button onclick="teachOwnAi()">Teach Me</button>
+<script>
+async function sendOwnAi(){
+  let msg=document.getElementById('ownAiInput').value;
+  let hh=document.getElementById('ownAiHistory');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_own_ai?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nOWN AI: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+async function teachOwnAi(){
+  let msg=document.getElementById('ownAiTeach').value;
+  let hh=document.getElementById('ownAiHistory');
+  hh.textContent+='\n\nTEACH: '+msg;
+  let r=await fetch('/api/omni_own_ai?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nOWN AI: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
 <div class="omni-orb-wrap"><div class="omni-orb"></div><div class="omni-orb-label">BH-OMNI CORE - Aurora Orb - CSS Animation Only</div></div>
 <h1>🌌 BH-OMNI CORE</h1>
 <p>Modular AI Ecosystem - Built on Phone - <b>Phase 8 - OMNI INFINITY V12 - SAME PROJECT!</b></p>

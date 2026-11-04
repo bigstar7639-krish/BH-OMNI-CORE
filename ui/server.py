@@ -232,6 +232,15 @@ def get_omni_briefing(msg="briefing"):
         return {"reply": r, "source": "omni_briefing.py - SAME PROJECT"}
     except Exception as e:
         return {"reply": f"Briefing error: {e}", "source": "omni_briefing.py"}
+def get_omni_own_ai(msg="own ai"):
+    try:
+        from omni_own_ai import handle_own_ai
+        r = handle_own_ai(msg)
+        if r is None:
+            r = "Own AI: 'own ai Vanakkam' / 'teach Q | A' nu try pannu da!"
+        return {"reply": r, "source": "omni_own_ai.py - 100% OWN, NO API"}
+    except Exception as e:
+        return {"reply": f"Own AI error: {e}", "source": "omni_own_ai.py"}
 def get_omni_tts(msg="speak Vanakkam"):
     try:
         from omni_tts import handle_tts
@@ -535,6 +544,9 @@ class H(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/omni_briefing"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "briefing"
             self.send_json(get_omni_briefing(msg))
+        if self.path.startswith("/api/omni_own_ai"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "own ai"
+            self.send_json(get_omni_own_ai(msg))
         if self.path.startswith("/api/omni_tts"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "speak Vanakkam"
             self.send_json(get_omni_tts(msg))
