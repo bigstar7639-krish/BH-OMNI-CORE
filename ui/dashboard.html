@@ -173,6 +173,18 @@ async function sendMem(){
     h.textContent += '\nOMNI MEMORY: '+j.reply; h.scrollTop=h.scrollHeight;
   }catch(e){ h.textContent += '\nError: '+e; } }
 </script>
+<div class="card"><b>🌅 OMNI DAILY PLANNER - Phase 8 Step 4!</b><br><br>
+<div id="dailyHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Daily Planner Ready! 'daily' nu click pannu!</div><br>
+<button onclick="showDaily()">Show Daily Planner</button>
+</div>
+<script>
+async function showDaily(){
+  const h=document.getElementById('dailyHistory');
+  h.textContent += '\n\n... Daily Planner loading ...';
+  try{ const r=await fetch('/api/omni_daily?msg='+encodeURIComponent('daily')); const j=await r.json();
+    h.textContent += '\n\n'+j.reply; h.scrollTop=h.scrollHeight;
+  }catch(e){ h.textContent += '\nError: '+e; } }
+</script>
 <div class="card"><b>📤 EXPORT</b><br><br>
 <button onclick="exportData()">Export My Data (JSON)</button>
 <div id="exportResult">Export = summary only, NO secrets, NO vault!</div>

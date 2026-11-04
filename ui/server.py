@@ -222,6 +222,17 @@ def get_omni_memory(msg="memory"):
     except Exception as ex:
         return {"reply": f"Memory error: {ex}"}
 
+
+def get_omni_daily(msg="daily"):
+    try:
+        from omni_daily import handle_daily
+        r = handle_daily(msg)
+        if r is not None:
+            return {"reply": r, "source": "omni_daily.py - SAME PROJECT"}
+        return {"reply": "Daily Planner Ready! 'daily' nu type pannu!"}
+    except Exception as ex:
+        return {"reply": f"Daily error: {ex}"}
+
 def get_analytics(track=False):
     global _ANALYTICS
     try:
@@ -349,6 +360,10 @@ class H(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/omni_memory"):
             msg = parse_qs(urlparse(self.path).query).get("msg", ["memory"])[0]
             self.send_json(get_omni_memory(msg))
+            return
+        if self.path.startswith("/api/omni_daily"):
+            msg = parse_qs(urlparse(self.path).query).get("msg", ["daily"])[0]
+            self.send_json(get_omni_daily(msg))
             return
         if self.path.startswith("/api/omni"):
             msg = parse_qs(urlparse(self.path).query).get("msg", ["hello"])[0]
