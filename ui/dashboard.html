@@ -173,6 +173,20 @@ async function sendMem(){
     h.textContent += '\nOMNI MEMORY: '+j.reply; h.scrollTop=h.scrollHeight;
   }catch(e){ h.textContent += '\nError: '+e; } }
 </script>
+<div class="card"><b>🌅 OMNI DAILY BRIEFING - Phase 16 Step 2!</b><br><br>
+<div id="briefHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Daily Briefing Ready!</div><br>
+<input id="briefInput" value="briefing" style="width:65%" onkeydown="if(event.key==='Enter')sendBrief()">
+<button onclick="sendBrief()">Send Briefing</button>
+<script>
+async function sendBrief(){
+  let msg=document.getElementById('briefInput').value;
+  let h=document.getElementById('briefHistory');
+  h.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_briefing?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  h.textContent+='\nBRIEFING: '+j.reply; h.scrollTop=h.scrollHeight;
+}
+</script></div>
 <div class="card"><b>✈️ OMNI TRAVEL PLANNER - Phase 15 Step 2!</b><br><br>
 <div id="travelHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Travel Planner Ready!</div><br>
 <input id="travelInput" value="trips" style="width:65%" onkeydown="if(event.key==='Enter')sendTravel()">

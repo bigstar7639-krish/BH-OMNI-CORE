@@ -223,6 +223,15 @@ def get_omni_memory(msg="memory"):
         return {"reply": f"Memory error: {ex}"}
 
 
+def get_omni_briefing(msg="briefing"):
+    try:
+        from omni_briefing import handle_briefing
+        r = handle_briefing(msg)
+        if r is None:
+            r = "Briefing: 'briefing' nu type pannu da!"
+        return {"reply": r, "source": "omni_briefing.py - SAME PROJECT"}
+    except Exception as e:
+        return {"reply": f"Briefing error: {e}", "source": "omni_briefing.py"}
 def get_omni_travel(msg="trips"):
     try:
         from omni_travel import handle_travel
@@ -433,6 +442,9 @@ class H(SimpleHTTPRequestHandler):
             msg = parse_qs(urlparse(self.path).query).get("msg", ["memory"])[0]
             self.send_json(get_omni_memory(msg))
             return
+        if self.path.startswith("/api/omni_briefing"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "briefing"
+            self.send_json(get_omni_briefing(msg))
         if self.path.startswith("/api/omni_travel"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "trips"
             self.send_json(get_omni_travel(msg))
