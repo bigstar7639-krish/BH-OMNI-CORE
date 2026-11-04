@@ -67,6 +67,20 @@ async function sendLiveWeather(){
   hh.textContent+='\nLIVE: '+j.reply; hh.scrollTop=hh.scrollHeight;
 }
 </script></div>
+<div class="card"><b>🌐 LIVE TRANSLATE - Phase 27 Step 2! (MyMemory FREE)</b><br><br>
+<div id="transLiveHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Live Translate Ready!</div><br>
+<input id="transLiveInput" value="translate live en|ta hello" style="width:65%" onkeydown="if(event.key==='Enter')sendTransLive()">
+<button onclick="sendTransLive()">Translate Live</button>
+<script>
+async function sendTransLive(){
+  let msg=document.getElementById('transLiveInput').value;
+  let hh=document.getElementById('transLiveHistory');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_translate_live?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nTRANS: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
 <div class="omni-orb-wrap"><div class="omni-orb"></div><div class="omni-orb-label">BH-OMNI CORE - Aurora Orb - CSS Animation Only</div></div>
 <h1>🌌 BH-OMNI CORE</h1>
 <p>Modular AI Ecosystem - Built on Phone - <b>Phase 8 - OMNI INFINITY V12 - SAME PROJECT!</b></p>

@@ -232,6 +232,15 @@ def get_omni_briefing(msg="briefing"):
         return {"reply": r, "source": "omni_briefing.py - SAME PROJECT"}
     except Exception as e:
         return {"reply": f"Briefing error: {e}", "source": "omni_briefing.py"}
+def get_omni_translate_live(msg="translate live hello"):
+    try:
+        from omni_translate_live import handle_translate_live
+        r = handle_translate_live(msg)
+        if r is None:
+            r = "Live Translate: 'translate live en|ta hello' nu try pannu da!"
+        return {"reply": r, "source": "omni_translate_live.py - MyMemory FREE"}
+    except Exception as e:
+        return {"reply": f"Live Translate error: {e}", "source": "omni_translate_live.py"}
 def get_omni_weather_live(msg="live weather"):
     try:
         from omni_weather_live import handle_weather_live
@@ -517,6 +526,9 @@ class H(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/omni_briefing"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "briefing"
             self.send_json(get_omni_briefing(msg))
+        if self.path.startswith("/api/omni_translate_live"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "translate live hello"
+            self.send_json(get_omni_translate_live(msg))
         if self.path.startswith("/api/omni_weather_live"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "live weather"
             self.send_json(get_omni_weather_live(msg))
