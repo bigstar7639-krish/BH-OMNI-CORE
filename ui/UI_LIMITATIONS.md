@@ -1,6 +1,6 @@
-# UI Limitations - Phase 6 Step 1
+# UI Limitations - Phase 6 Step 2
 
-- Dashboard = HTML only, NOT Android APK
-- Server = localhost only, NOT internet hosted
-- No real app, no Play Store
+- Dashboard V2 = HTML + Local API only, NOT Android APK
+- API = /api/health + /api/regression, localhost only
+- Buttons call REAL Python functions, NOT fake data
 - DO NOT CLAIM APK built
