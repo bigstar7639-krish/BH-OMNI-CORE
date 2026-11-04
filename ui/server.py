@@ -232,6 +232,15 @@ def get_omni_briefing(msg="briefing"):
         return {"reply": r, "source": "omni_briefing.py - SAME PROJECT"}
     except Exception as e:
         return {"reply": f"Briefing error: {e}", "source": "omni_briefing.py"}
+def get_omni_weather(msg="weather"):
+    try:
+        from omni_weather import handle_weather
+        r = handle_weather(msg)
+        if r is None:
+            r = "Weather: 'weather rain' nu try pannu da!"
+        return {"reply": r, "source": "omni_weather.py - SAME PROJECT"}
+    except Exception as e:
+        return {"reply": f"Weather error: {e}", "source": "omni_weather.py"}
 def get_omni_code(msg="code"):
     try:
         from omni_code import handle_code
@@ -472,6 +481,9 @@ class H(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/omni_briefing"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "briefing"
             self.send_json(get_omni_briefing(msg))
+        if self.path.startswith("/api/omni_weather"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "weather"
+            self.send_json(get_omni_weather(msg))
         if self.path.startswith("/api/omni_code"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "code"
             self.send_json(get_omni_code(msg))
