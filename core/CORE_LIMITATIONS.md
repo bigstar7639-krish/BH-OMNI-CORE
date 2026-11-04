@@ -7,3 +7,8 @@
   3. No event persistence / replay - Future Step
   4. No production claim without real assessment
   5. Preserve mod_01-mod_32 - This core does NOT modify them, only orders them
+
+## Step 2 - Plugin + Health
+- PluginLoader: Manifest validation, no auto-load, load/unload state
+- HealthMonitor: Explicit status, unknown module fails, unhealthy list
+- Limitations: In-memory only, no plugin sandboxing in demo, no auto-recovery
