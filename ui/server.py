@@ -1,5 +1,5 @@
 """
-Phase 7 Step 5 - FINALE - Settings + Export + Ads Server
+Phase 8 Step 1 - OMNI INFINITY Merged - SAME PROJECT - Settings + Export + Ads Server
 - GET /api/health, /api/regression, /api/story, /api/voice, /api/market, /api/analytics, /api/ads, /api/export
 - Localhost only, NO internet, NO APK, NO real AdMob
 """
@@ -201,6 +201,15 @@ def get_quiz(action="start", qid="", ans=""):
     except Exception as ex:
         return {"error": str(ex)}
 
+
+def get_omni(msg="hello"):
+    try:
+        from omni_infinity import omni_reply
+        reply = omni_reply(msg)
+        return {"reply": reply, "source": "omni_infinity.py - SAME PROJECT - BH-OMNI", "note": "OMNI INFINITY - 66 replies + 20 kadhai + 20 joke + 20 quiz - Rule-based, NOT real LLM"}
+    except Exception as ex:
+        return {"reply": f"OMNI error: {ex}", "source": "fallback", "note": "Rule-based"}
+
 def get_analytics(track=False):
     global _ANALYTICS
     try:
@@ -268,7 +277,7 @@ def get_ads(action="show"):
 def get_export():
     try:
         h = get_health()
-        return {"version": "BH-OMNI-CORE v0.6.0 - Phase 7 Step 5 - FINALE", "total_pass": 214, "health": h.get("overall", "UNKNOWN"), "health_ok": h.get("ok", 0), "modules": 16, "note": "Summary only - NO secrets - NO secrets, NO vault_data, NO PII."}
+        return {"version": "BH-OMNI-CORE v0.6.0 - Phase 8 Step 1 - OMNI INFINITY Merged - SAME PROJECT", "total_pass": 214, "health": h.get("overall", "UNKNOWN"), "health_ok": h.get("ok", 0), "modules": 16, "note": "Summary only - NO secrets, NO vault_data, NO PII."}
     except Exception as ex:
         return {"error": str(ex)}
 class H(SimpleHTTPRequestHandler):
@@ -325,14 +334,18 @@ class H(SimpleHTTPRequestHandler):
             qs = parse_qs(urlparse(self.path).query)
             self.send_json(get_quiz(qs.get("action", ["start"])[0], qs.get("qid", [""])[0], qs.get("ans", [""])[0]))
             return
+        if self.path.startswith("/api/omni"):
+            msg = parse_qs(urlparse(self.path).query).get("msg", ["hello"])[0]
+            self.send_json(get_omni(msg))
+            return
         if self.path.startswith("/api/export"):
             self.send_json(get_export())
             return
         return super().do_GET()
 def start_server(port=8000):
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)
-    print(f"BH-OMNI Dashboard V11 - PHASE 7 COMPLETE: http://127.0.0.1:{port}/dashboard.html")
-    print("API: health + regression + story + voice + market + analytics + ads + export + chat + search + recommend + quiz")
+    print(f"BH-OMNI Dashboard V12 - PHASE 8 OMNI INFINITY - SAME PROJECT: http://127.0.0.1:{port}/dashboard.html")
+    print("API: health + regression + story + voice + market + analytics + ads + export + chat + search + recommend + quiz + omni")
     print("Press Ctrl+C to stop")
     srv.serve_forever()
 if __name__ == "__main__":
