@@ -8,7 +8,7 @@
   4. No production claim without real assessment
   5. Preserve mod_01-mod_32 - This core does NOT modify them, only orders them
 
-## Step 3 - Gateway + Registry
-- Gateway: 404/403/200/500, no internal error leak, permission check per route
-- Registry: F-XXX IDs, duplicate ID/name blocked
-- Limitations: In-memory only, no JWT validation in gateway (Step 6 Session must be checked by caller), no persistent registry
+## Step 4 - Router + Context
+- Router: Capability match + lowest cost, explicit fallback only
+- Context: Token estimate len//4 (approx, not real tokenizer), keep system, trim oldest
+- Limitations: In-memory only, no real tokenizer, no summarization (future), no persistent context
