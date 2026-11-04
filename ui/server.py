@@ -210,6 +210,18 @@ def get_omni(msg="hello"):
     except Exception as ex:
         return {"reply": f"OMNI error: {ex}", "source": "fallback", "note": "Rule-based"}
 
+
+def get_omni_memory(msg="memory"):
+    try:
+        from omni_memory import handle_memory
+        r = handle_memory(msg)
+        if r is not None:
+            return {"reply": r, "source": "omni_memory.py - SAME PROJECT"}
+        from omni_infinity import omni_reply
+        return {"reply": omni_reply(msg), "source": "omni_infinity.py"}
+    except Exception as ex:
+        return {"reply": f"Memory error: {ex}"}
+
 def get_analytics(track=False):
     global _ANALYTICS
     try:
@@ -333,6 +345,10 @@ class H(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/quiz"):
             qs = parse_qs(urlparse(self.path).query)
             self.send_json(get_quiz(qs.get("action", ["start"])[0], qs.get("qid", [""])[0], qs.get("ans", [""])[0]))
+            return
+        if self.path.startswith("/api/omni_memory"):
+            msg = parse_qs(urlparse(self.path).query).get("msg", ["memory"])[0]
+            self.send_json(get_omni_memory(msg))
             return
         if self.path.startswith("/api/omni"):
             msg = parse_qs(urlparse(self.path).query).get("msg", ["hello"])[0]

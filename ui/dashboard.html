@@ -158,6 +158,21 @@ async function sendOmni(){
     document.getElementById('omniInput').value='';
   }catch(e){ h.textContent += '\nError: '+e; } }
 </script>
+<div class="card"><b>🧠 OMNI MEMORY</b><br>
+<div id="memHistory">OMNI MEMORY Ready!</div><br>
+<input id="memInput" value="memory">
+<button onclick="sendMem()">Save</button>
+</div>
+<script>
+async function sendMem(){
+  const msg=document.getElementById('memInput').value.trim();
+  if(!msg) return;
+  const h=document.getElementById('memHistory');
+  h.textContent += '\n\nNEE: '+msg;
+  try{ const r=await fetch('/api/omni_memory?msg='+encodeURIComponent(msg)); const j=await r.json();
+    h.textContent += '\nOMNI MEMORY: '+j.reply; h.scrollTop=h.scrollHeight;
+  }catch(e){ h.textContent += '\nError: '+e; } }
+</script>
 <div class="card"><b>📤 EXPORT</b><br><br>
 <button onclick="exportData()">Export My Data (JSON)</button>
 <div id="exportResult">Export = summary only, NO secrets, NO vault!</div>
