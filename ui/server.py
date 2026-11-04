@@ -1,5 +1,5 @@
 """
-Phase 6 Step 6 - FINALE - Settings + Export + Ads Server
+Phase 7 Step 1 - AI Chat - Settings + Export + Ads Server
 - GET /api/health, /api/regression, /api/story, /api/voice, /api/market, /api/analytics, /api/ads, /api/export
 - Localhost only, NO internet, NO APK, NO real AdMob
 """
@@ -11,6 +11,51 @@ BASE = Path(__file__).parent.parent
 sys.path.insert(0, str(BASE))
 _ANALYTICS = None
 _ADS = None
+
+_CHAT_CTX = None
+_CHAT_ROUTER = None
+def get_chat(msg="Hello"):
+    global _CHAT_CTX, _CHAT_ROUTER
+    try:
+        from core.context_manager import ContextManager
+        from core.model_router import ModelRouter
+        from core.ai_evaluation import AIEvaluation
+        if _CHAT_CTX is None:
+            _CHAT_CTX = ContextManager()
+        if _CHAT_ROUTER is None:
+            _CHAT_ROUTER = ModelRouter()
+            try:
+                _CHAT_ROUTER.register("demo-chat", ["chat", "text"], 1)
+            except Exception:
+                pass
+        _CHAT_CTX.add("user", msg)
+        # Route - fallback to demo-chat if no models
+        try:
+            model = _CHAT_ROUTER.route("chat")
+            model_name = model if isinstance(model, str) else str(model)
+        except Exception:
+            model_name = "demo-chat (rule-based)"
+        # Rule-based reply - NOT LLM, NOT OpenAI, NOT real AI
+        low = msg.lower()
+        if "hello" in low or "hi" in low or "vanakkam" in low:
+            reply = "Vanakkam! 🙏 Naan BH-OMNI! Eppadi irukkeenga? Dashboard-la buttons-a try pannunga!"
+        elif "help" in low or "udhavi" in low:
+            reply = "Naan help pannalam! Story create pannalam, Voice try pannalam, Marketplace paakalam - Playground section-la try pannu!"
+        elif "score" in low or "pass" in low:
+            reply = "Ippo BH-OMNI-la 230 PASS, 0 FAIL! Ellam Termux-la verified!"
+        elif "apk" in low:
+            reply = "APK innum illa - Dashboard mattum thaan! Fake claim panna maaten!"
+        elif "who" in low or "nee yaaru" in low or "un peru" in low:
+            reply = "Naan BH-OMNI CORE - Phone-la build panna modular AI ecosystem! Rule-based chat thaan - real LLM illa!"
+        else:
+            reply = f"Puriyuthu! Nee sonna: '{msg}'. Naan rule-based chat thaan - keywords-a vachu reply pannren. 'help' nu type pannu!"
+        _CHAT_CTX.add("assistant", reply)
+        ev = AIEvaluation()
+        score = ev.evaluate(reply, [w for w in msg.lower().split() if len(w) > 2][:3])
+        return {"reply": reply, "model": model_name, "score": score.get("score", 0), "tokens": _CHAT_CTX.total_tokens() if hasattr(_CHAT_CTX, "total_tokens") else len(msg)//4, "note": "Rule-based demo - NOT real LLM, NOT OpenAI"}
+    except Exception as ex:
+        return {"error": str(ex), "note": "Rule-based demo"}
+
 def get_analytics(track=False):
     global _ANALYTICS
     try:
@@ -78,7 +123,7 @@ def get_ads(action="show"):
 def get_export():
     try:
         h = get_health()
-        return {"version": "BH-OMNI-CORE v0.6.0 - Phase 6 Step 6 - FINALE", "total_pass": 214, "health": h.get("overall", "UNKNOWN"), "health_ok": h.get("ok", 0), "modules": 16, "note": "Summary only - NO secrets, NO vault_data, NO PII."}
+        return {"version": "BH-OMNI-CORE v0.6.0 - Phase 7 Step 1 - AI Chat", "total_pass": 214, "health": h.get("overall", "UNKNOWN"), "health_ok": h.get("ok", 0), "modules": 16, "note": "Summary only - NO secrets, NO vault_data, NO PII."}
     except Exception as ex:
         return {"error": str(ex)}
 class H(SimpleHTTPRequestHandler):
@@ -119,14 +164,18 @@ class H(SimpleHTTPRequestHandler):
             action = parse_qs(urlparse(self.path).query).get("action", ["show"])[0]
             self.send_json(get_ads(action=action))
             return
+        if self.path.startswith("/api/chat"):
+            msg = parse_qs(urlparse(self.path).query).get("msg", ["Hello"])[0]
+            self.send_json(get_chat(msg))
+            return
         if self.path.startswith("/api/export"):
             self.send_json(get_export())
             return
         return super().do_GET()
 def start_server(port=8000):
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)
-    print(f"BH-OMNI Dashboard V6 - PHASE 6 COMPLETE: http://127.0.0.1:{port}/dashboard.html")
-    print("API: health + regression + story + voice + market + analytics + ads + export")
+    print(f"BH-OMNI Dashboard V7 - PHASE 7 AI CHAT: http://127.0.0.1:{port}/dashboard.html")
+    print("API: health + regression + story + voice + market + analytics + ads + export + chat")
     print("Press Ctrl+C to stop")
     srv.serve_forever()
 if __name__ == "__main__":

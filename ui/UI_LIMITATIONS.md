@@ -1,9 +1,8 @@
-# UI Limitations - Phase 6 Step 5
+# UI Limitations - Phase 7 Step 1
 
-- Dashboard V5 = HTML + Local API, NOT Android APK
-- Settings = Browser localStorage only, NOT server
-- Analytics = In-memory only, PII blocked
-- Ads = Local simulation, SPONSORED label, NO real AdMob, NO real revenue, freq cap 5/day
-- Export = Summary only, NO secrets, NO vault
-- Playground: Voice metadata only, Marketplace no real money
-- DO NOT CLAIM APK built
+- Dashboard V7 Chat = Rule-based demo, NOT real LLM, NOT OpenAI, NOT ChatGPT
+- Chat uses ModelRouter + ContextManager + AIEvaluation (rule-based score)
+- Dashboard = HTML + Local API, NOT Android APK
+- Ads = Local simulation, NO real AdMob
+- Export = Summary only, NO secrets
+- DO NOT CLAIM real AI / APK built

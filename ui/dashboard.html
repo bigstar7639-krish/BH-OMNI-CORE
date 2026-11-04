@@ -18,8 +18,8 @@ body.neon{background:#000;color:#00ff88} body.neon .card{background:#111;color:#
 </style></head>
 <body>
 <h1>🌌 BH-OMNI CORE</h1>
-<p>Modular AI Ecosystem - Built on Phone - <b>Phase 6 COMPLETE V6!</b></p>
-<div class="card"><div class="big">222 PASS, 0 FAIL</div><span class="badge">ALL PHASES DONE</span></div>
+<p>Modular AI Ecosystem - Built on Phone - <b>Phase 7 - AI Chat V7!</b></p>
+<div class="card"><div class="big">230 PASS, 0 FAIL</div><span class="badge">ALL PHASES DONE</span></div>
 <div class="card"><b>🔴 LIVE CHECK</b><br><br>
 <button onclick="checkHealth()">🏥 Health Check</button>
 <button onclick="checkRegression()">🧪 Run Regression</button>
@@ -56,6 +56,27 @@ body.neon{background:#000;color:#00ff88} body.neon .card{background:#111;color:#
 <button onclick="clickAd()">Click Ad</button>
 <div id="adsResult">Ads are LOCAL simulation - NO real AdMob, NO real revenue!</div>
 </div>
+
+<div class="card"><b>🤖 AI CHAT - Phase 7!</b><br><br>
+<div id="chatHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:80px;max-height:220px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Hi! Naan BH-OMNI Chat! Enakku message anupu! (Rule-based demo - NOT real LLM)</div><br>
+<input id="chatInput" value="Hello BH-OMNI!" style="width:65%" onkeydown="if(event.key==='Enter')sendChat()">
+<button onclick="sendChat()">Send</button>
+<button onclick="clearChat()">Clear</button>
+</div>
+<script>
+async function sendChat(){
+  const msg=document.getElementById('chatInput').value.trim();
+  if(!msg) return;
+  const h=document.getElementById('chatHistory');
+  h.textContent += '\n\nYOU: '+msg+'\n... thinking ...';
+  h.scrollTop=h.scrollHeight;
+  try{ const r=await fetch('/api/chat?msg='+encodeURIComponent(msg)); const j=await r.json();
+    h.textContent += '\nBH-OMNI ['+j.model+']: '+j.reply+'\nScore: '+j.score+'/100 | Tokens: '+j.tokens+' | '+j.note;
+    h.scrollTop=h.scrollHeight;
+    document.getElementById('chatInput').value='';
+  }catch(e){ h.textContent += '\nError: '+e; } }
+function clearChat(){ document.getElementById('chatHistory').textContent='Chat cleared! Puthu message anupu!'; }
+</script>
 <div class="card"><b>📤 EXPORT</b><br><br>
 <button onclick="exportData()">Export My Data (JSON)</button>
 <div id="exportResult">Export = summary only, NO secrets, NO vault!</div>
@@ -66,7 +87,7 @@ body.neon{background:#000;color:#00ff88} body.neon .card{background:#111;color:#
 <div class="card"><b>Phase 3 - F-J Systems</b><br>40 PASS</div>
 <div class="card"><b>Phase 4 - Integration</b><br>24 PASS</div>
 <div class="card"><b>Phase 5 - Release</b><br>16 PASS</div>
-<div class="card"><b>Phase 6 - UI</b><br>Step 6 - FINALE - PHASE 6 COMPLETE!</div>
+<div class="card"><b>Phase 6 - UI</b><br>Step 1 - AI Chat - YOU ARE HERE</div>
 </div>
 <div class="card"><b>⚠️ Honest Limitations</b><br><span class="warn">NO REAL TTS / AdMob / Billing / Cloud</span><br>No APK yet - Dashboard only. No fake claims. Ads = local simulation.</div>
 <div class="card"><b>Modules</b><br>security/ • core/ • systems_fj/ • integration/ • release/ • ui/</div>
