@@ -1,5 +1,5 @@
 """
-Phase 6 Step 5 - Settings + Export + Ads Server
+Phase 6 Step 6 - FINALE - Settings + Export + Ads Server
 - GET /api/health, /api/regression, /api/story, /api/voice, /api/market, /api/analytics, /api/ads, /api/export
 - Localhost only, NO internet, NO APK, NO real AdMob
 """
@@ -78,7 +78,7 @@ def get_ads(action="show"):
 def get_export():
     try:
         h = get_health()
-        return {"version": "BH-OMNI-CORE v0.6.0 - Phase 6 Step 5", "total_pass": 214, "health": h.get("overall", "UNKNOWN"), "health_ok": h.get("ok", 0), "modules": 16, "note": "Summary only - NO secrets, NO vault_data, NO PII."}
+        return {"version": "BH-OMNI-CORE v0.6.0 - Phase 6 Step 6 - FINALE", "total_pass": 214, "health": h.get("overall", "UNKNOWN"), "health_ok": h.get("ok", 0), "modules": 16, "note": "Summary only - NO secrets, NO vault_data, NO PII."}
     except Exception as ex:
         return {"error": str(ex)}
 class H(SimpleHTTPRequestHandler):
@@ -125,7 +125,7 @@ class H(SimpleHTTPRequestHandler):
         return super().do_GET()
 def start_server(port=8000):
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)
-    print(f"BH-OMNI Dashboard V5: http://127.0.0.1:{port}/dashboard.html")
+    print(f"BH-OMNI Dashboard V6 - PHASE 6 COMPLETE: http://127.0.0.1:{port}/dashboard.html")
     print("API: health + regression + story + voice + market + analytics + ads + export")
     print("Press Ctrl+C to stop")
     srv.serve_forever()
