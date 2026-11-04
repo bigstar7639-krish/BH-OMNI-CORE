@@ -1,7 +1,7 @@
-# UI Limitations - Phase 6 Step 3
+# UI Limitations - Phase 6 Step 4
 
-- Dashboard V3 Playground = HTML + Local API, NOT Android APK
-- Playground uses REAL modules: StoryEngine, VoiceEngine (metadata only), Marketplace (no real money)
-- Voice = metadata only, NO real TTS audio
-- Marketplace = NO real money
+- Dashboard V4 = HTML + Local API, NOT Android APK
+- Theme = CSS only, saved in browser localStorage, NOT server
+- Analytics = In-memory only, resets on server restart, PII blocked
+- Playground: Voice metadata only, Marketplace no real money
 - DO NOT CLAIM APK built
