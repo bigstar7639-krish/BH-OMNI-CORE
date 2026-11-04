@@ -241,6 +241,60 @@ def get_omni_stt(msg="stt"):
         return {"reply": r, "source": "omni_stt.py - Voice to Text"}
     except Exception as e:
         return {"reply": f"STT error: {e}", "source": "omni_stt.py"}
+def get_omni_books(msg="Books: 'book tamil'"):
+    try:
+        from omni_books import handle_books
+        r = handle_books(msg)
+        if r is None:
+            r = "Books: 'book tamil' nu try pannu da!"
+        return {"reply": r, "source": "omni_books.py - ONE-SHOT"}
+    except Exception as e:
+        return {"reply": f"books error: {e}", "source": "omni_books.py"}
+def get_omni_ocr(msg="OCR: 'ocr'"):
+    try:
+        from omni_ocr import handle_ocr
+        r = handle_ocr(msg)
+        if r is None:
+            r = "OCR: 'ocr' nu try pannu da!"
+        return {"reply": r, "source": "omni_ocr.py - ONE-SHOT"}
+    except Exception as e:
+        return {"reply": f"ocr error: {e}", "source": "omni_ocr.py"}
+def get_omni_files(msg="Files: 'read VERSION.txt'"):
+    try:
+        from omni_files import handle_files
+        r = handle_files(msg)
+        if r is None:
+            r = "Files: 'read VERSION.txt' nu try pannu da!"
+        return {"reply": r, "source": "omni_files.py - ONE-SHOT"}
+    except Exception as e:
+        return {"reply": f"files error: {e}", "source": "omni_files.py"}
+def get_omni_network(msg="Network: 'network'"):
+    try:
+        from omni_network import handle_network
+        r = handle_network(msg)
+        if r is None:
+            r = "Network: 'network' nu try pannu da!"
+        return {"reply": r, "source": "omni_network.py - ONE-SHOT"}
+    except Exception as e:
+        return {"reply": f"network error: {e}", "source": "omni_network.py"}
+def get_omni_health(msg="Health: 'meds'"):
+    try:
+        from omni_health import handle_health
+        r = handle_health(msg)
+        if r is None:
+            r = "Health: 'meds' nu try pannu da!"
+        return {"reply": r, "source": "omni_health.py - ONE-SHOT"}
+    except Exception as e:
+        return {"reply": f"health error: {e}", "source": "omni_health.py"}
+def get_omni_budget(msg="Budget: 'budget'"):
+    try:
+        from omni_budget import handle_budget
+        r = handle_budget(msg)
+        if r is None:
+            r = "Budget: 'budget' nu try pannu da!"
+        return {"reply": r, "source": "omni_budget.py - ONE-SHOT"}
+    except Exception as e:
+        return {"reply": f"budget error: {e}", "source": "omni_budget.py"}
 def get_omni_brain(msg="brain"):
     try:
         from omni_brain_full import handle_brain
@@ -601,6 +655,24 @@ class H(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/omni_stt"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "stt"
             self.send_json(get_omni_stt(msg))
+        if self.path.startswith("/api/omni_books"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "Books: 'book tamil'"
+            self.send_json(get_omni_books(msg))
+        if self.path.startswith("/api/omni_ocr"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "OCR: 'ocr'"
+            self.send_json(get_omni_ocr(msg))
+        if self.path.startswith("/api/omni_files"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "Files: 'read VERSION.txt'"
+            self.send_json(get_omni_files(msg))
+        if self.path.startswith("/api/omni_network"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "Network: 'network'"
+            self.send_json(get_omni_network(msg))
+        if self.path.startswith("/api/omni_health"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "Health: 'meds'"
+            self.send_json(get_omni_health(msg))
+        if self.path.startswith("/api/omni_budget"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "Budget: 'budget'"
+            self.send_json(get_omni_budget(msg))
         if self.path.startswith("/api/omni_brain"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "brain"
             self.send_json(get_omni_brain(msg))

@@ -212,6 +212,90 @@ async function sendSTT(){
   hh.textContent='STT: '+j.reply; hh.scrollTop=hh.scrollHeight;
 }
 </script></div>
+<div class="card"><b>📚 OMNI BOOKS - One-Shot! (Gutenberg FREE)</b><br><br>
+<div id="booksHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Books Ready!</div><br>
+<input id="booksInput" value="book tamil" style="width:65%" onkeydown="if(event.key==='Enter')sendBooks()">
+<button onclick="sendBooks()">Send Books</button>
+<script>
+async function sendBooks{
+  let msg=document.getElementById('booksInput').value;
+  let hh=document.getElementById('booksHistory');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_books?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nBOOKS: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
+<div class="card"><b>📷 OMNI OCR - One-Shot! (tesseract)</b><br><br>
+<div id="ocrHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">OCR Ready!</div><br>
+<input id="ocrInput" value="ocr" style="width:65%" onkeydown="if(event.key==='Enter')sendOcr()">
+<button onclick="sendOcr()">Send OCR</button>
+<script>
+async function sendOcr{
+  let msg=document.getElementById('ocrInput').value;
+  let hh=document.getElementById('ocrHistory');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_ocr?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nOCR: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
+<div class="card"><b>📄 OMNI FILES - One-Shot! (TXT Reader)</b><br><br>
+<div id="filesHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Files Ready!</div><br>
+<input id="filesInput" value="read VERSION.txt" style="width:65%" onkeydown="if(event.key==='Enter')sendFiles()">
+<button onclick="sendFiles()">Send Files</button>
+<script>
+async function sendFiles{
+  let msg=document.getElementById('filesInput').value;
+  let hh=document.getElementById('filesHistory');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_files?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nFILES: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
+<div class="card"><b>📶 OMNI NETWORK - One-Shot!</b><br><br>
+<div id="networkHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Network Ready!</div><br>
+<input id="networkInput" value="network" style="width:65%" onkeydown="if(event.key==='Enter')sendNetwork()">
+<button onclick="sendNetwork()">Send Network</button>
+<script>
+async function sendNetwork{
+  let msg=document.getElementById('networkInput').value;
+  let hh=document.getElementById('networkHistory');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_network?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nNETWORK: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
+<div class="card"><b>💊 OMNI HEALTH - One-Shot! (Meds)</b><br><br>
+<div id="healthHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Health Ready!</div><br>
+<input id="healthInput" value="meds" style="width:65%" onkeydown="if(event.key==='Enter')sendHealth()">
+<button onclick="sendHealth()">Send Health</button>
+<script>
+async function sendHealth{
+  let msg=document.getElementById('healthInput').value;
+  let hh=document.getElementById('healthHistory');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_health?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nHEALTH: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
+<div class="card"><b>💰 OMNI BUDGET - One-Shot!</b><br><br>
+<div id="budgetHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Budget Ready!</div><br>
+<input id="budgetInput" value="budget" style="width:65%" onkeydown="if(event.key==='Enter')sendBudget()">
+<button onclick="sendBudget()">Send Budget</button>
+<script>
+async function sendBudget{
+  let msg=document.getElementById('budgetInput').value;
+  let hh=document.getElementById('budgetHistory');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_budget?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nBUDGET: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
 <div class="omni-orb-wrap"><div class="omni-orb"></div><div class="omni-orb-label">BH-OMNI CORE - Aurora Orb - CSS Animation Only</div></div>
 <h1>🌌 BH-OMNI CORE</h1>
 <p>Modular AI Ecosystem - Built on Phone - <b>Phase 8 - OMNI INFINITY V12 - SAME PROJECT!</b></p>
