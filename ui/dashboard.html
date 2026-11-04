@@ -119,6 +119,25 @@ async function teachOwnAi(){
   hh.textContent+='\nOWN AI: '+j.reply; hh.scrollTop=hh.scrollHeight;
 }
 </script></div>
+<div class="card"><b>🧠 OWN AI v2 - Phase 31 Step 2! (Brain Manager)</b><br><br>
+<div id="ownV2History" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Own AI v2 Ready!</div><br>
+<button onclick="sendOwnV2('my lessons')">My Lessons</button>
+<button onclick="sendOwnV2('my brain')">My Brain</button><br><br>
+<input id="ownV2Forget" value="forget vanakkam" style="width:65%" onkeydown="if(event.key==='Enter')sendOwnV2Forget()">
+<button onclick="sendOwnV2Forget()">Forget</button>
+<script>
+async function sendOwnV2(msg){
+  let hh=document.getElementById('ownV2History');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_own_v2?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nOWN AI v2: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+async function sendOwnV2Forget(){
+  let msg=document.getElementById('ownV2Forget').value;
+  sendOwnV2(msg);
+}
+</script></div>
 <div class="omni-orb-wrap"><div class="omni-orb"></div><div class="omni-orb-label">BH-OMNI CORE - Aurora Orb - CSS Animation Only</div></div>
 <h1>🌌 BH-OMNI CORE</h1>
 <p>Modular AI Ecosystem - Built on Phone - <b>Phase 8 - OMNI INFINITY V12 - SAME PROJECT!</b></p>
