@@ -232,6 +232,15 @@ def get_omni_briefing(msg="briefing"):
         return {"reply": r, "source": "omni_briefing.py - SAME PROJECT"}
     except Exception as e:
         return {"reply": f"Briefing error: {e}", "source": "omni_briefing.py"}
+def get_omni_lang(msg="languages"):
+    try:
+        from omni_lang import handle_lang
+        r = handle_lang(msg)
+        if r is None:
+            r = "Language: 'translate vanakkam' / 'detect Hello' nu try pannu da!"
+        return {"reply": r, "source": "omni_lang.py - SAME PROJECT"}
+    except Exception as e:
+        return {"reply": f"Lang error: {e}", "source": "omni_lang.py"}
 def get_omni_emergency(msg="sos"):
     try:
         from omni_emergency import handle_emergency
@@ -454,6 +463,9 @@ class H(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/omni_briefing"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "briefing"
             self.send_json(get_omni_briefing(msg))
+        if self.path.startswith("/api/omni_lang"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "languages"
+            self.send_json(get_omni_lang(msg))
         if self.path.startswith("/api/omni_emergency"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "sos"
             self.send_json(get_omni_emergency(msg))
