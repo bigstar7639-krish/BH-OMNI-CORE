@@ -31,6 +31,17 @@ body.light{background:#f1f5f9;color:#0f172a} body.light .card{background:#fff;co
 body.neon{background:#000;color:#00ff88} body.neon .card{background:#111;color:#00ff88;border:1px solid #00ff88} body.neon h1{color:#ff00ff} body.neon button{background:#ff00ff;color:#fff} body.neon #result,body.neon #playResult,body.neon #analyticsResult,body.neon #adsResult,body.neon #exportResult{background:#000;color:#00ff88;border:1px solid #00ff88}
 </style></head>
 <body>
+<div class="card"><b>📊 OMNI STATS - Phase 23 Step 2!</b><br><br>
+<div id="statsHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Stats Ready!</div><br>
+<button onclick="sendStats()">Show Stats</button>
+<script>
+async function sendStats(){
+  let hh=document.getElementById('statsHistory');
+  let r=await fetch('/api/omni_stats?msg='+encodeURIComponent('stats'));
+  let j=await r.json();
+  hh.textContent='STATS: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
 <div class="omni-orb-wrap"><div class="omni-orb"></div><div class="omni-orb-label">BH-OMNI CORE - Aurora Orb - CSS Animation Only</div></div>
 <h1>🌌 BH-OMNI CORE</h1>
 <p>Modular AI Ecosystem - Built on Phone - <b>Phase 8 - OMNI INFINITY V12 - SAME PROJECT!</b></p>
