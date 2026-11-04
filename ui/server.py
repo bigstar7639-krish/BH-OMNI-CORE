@@ -223,6 +223,15 @@ def get_omni_memory(msg="memory"):
         return {"reply": f"Memory error: {ex}"}
 
 
+def get_omni_mood(msg="moods"):
+    try:
+        from omni_mood import handle_mood
+        r = handle_mood(msg)
+        if r is None:
+            r = "Mood illa da! 'mood happy' nu save pannu!"
+        return {"reply": r, "source": "omni_mood.py - SAME PROJECT"}
+    except Exception as e:
+        return {"reply": f"Mood error: {e}", "source": "omni_mood.py"}
 def get_omni_expense(msg="expenses"):
     try:
         from omni_expense import handle_expense
@@ -379,6 +388,9 @@ class H(SimpleHTTPRequestHandler):
             msg = parse_qs(urlparse(self.path).query).get("msg", ["memory"])[0]
             self.send_json(get_omni_memory(msg))
             return
+        if self.path.startswith("/api/omni_mood"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "moods"
+            self.send_json(get_omni_mood(msg))
         if self.path.startswith("/api/omni_expense"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "expenses"
             self.send_json(get_omni_expense(msg))

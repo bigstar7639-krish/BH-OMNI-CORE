@@ -173,6 +173,20 @@ async function sendMem(){
     h.textContent += '\nOMNI MEMORY: '+j.reply; h.scrollTop=h.scrollHeight;
   }catch(e){ h.textContent += '\nError: '+e; } }
 </script>
+<div class="card"><b>💛 OMNI MOOD JOURNAL - Phase 10 Step 2! (Estimate only)</b><br><br>
+<div id="moodHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Mood Journal Ready!</div><br>
+<input id="moodInput" value="moods" style="width:65%" onkeydown="if(event.key==='Enter')sendMood()">
+<button onclick="sendMood()">Send Mood</button>
+<script>
+async function sendMood(){
+  let msg=document.getElementById('moodInput').value;
+  let h=document.getElementById('moodHistory');
+  h.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_mood?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  h.textContent+='\nMOOD: '+j.reply; h.scrollTop=h.scrollHeight;
+}
+</script></div>
 <div class="card"><b>💰 OMNI EXPENSE TRACKER - Phase 9 Step 4!</b><br><br>
 <div id="expenseHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Expense Tracker Ready!</div><br>
 <input id="expenseInput" value="expenses" style="width:65%" onkeydown="if(event.key==='Enter')sendExpense()">
