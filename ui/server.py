@@ -223,6 +223,15 @@ def get_omni_memory(msg="memory"):
         return {"reply": f"Memory error: {ex}"}
 
 
+def get_omni_birthday(msg="birthdays"):
+    try:
+        from omni_birthday import handle_birthday
+        r = handle_birthday(msg)
+        if r is None:
+            r = "Birthday illa da! 'birthday add Amma | 12-05' nu add pannu!"
+        return {"reply": r, "source": "omni_birthday.py - SAME PROJECT"}
+    except Exception as e:
+        return {"reply": f"Birthday error: {e}", "source": "omni_birthday.py"}
 def get_omni_goal(msg="goals"):
     try:
         from omni_goal import handle_goal
@@ -415,6 +424,9 @@ class H(SimpleHTTPRequestHandler):
             msg = parse_qs(urlparse(self.path).query).get("msg", ["memory"])[0]
             self.send_json(get_omni_memory(msg))
             return
+        if self.path.startswith("/api/omni_birthday"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "birthdays"
+            self.send_json(get_omni_birthday(msg))
         if self.path.startswith("/api/omni_goal"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "goals"
             self.send_json(get_omni_goal(msg))
