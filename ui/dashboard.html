@@ -138,6 +138,19 @@ async function sendOwnV2Forget(){
   sendOwnV2(msg);
 }
 </script></div>
+<div class="card"><b>🧠 OWN AI v3 - Phase 32 Step 2! (Brain Backup)</b><br><br>
+<div id="ownV3History" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Own AI v3 Ready!</div><br>
+<button onclick="sendOwnV3('export brain')">Export Brain</button>
+<button onclick="sendOwnV3('import brain')">Import Brain</button>
+<script>
+async function sendOwnV3(msg){
+  let hh=document.getElementById('ownV3History');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_own_v3?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nOWN AI v3: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
 <div class="omni-orb-wrap"><div class="omni-orb"></div><div class="omni-orb-label">BH-OMNI CORE - Aurora Orb - CSS Animation Only</div></div>
 <h1>🌌 BH-OMNI CORE</h1>
 <p>Modular AI Ecosystem - Built on Phone - <b>Phase 8 - OMNI INFINITY V12 - SAME PROJECT!</b></p>
