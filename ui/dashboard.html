@@ -18,8 +18,8 @@ body.neon{background:#000;color:#00ff88} body.neon .card{background:#111;color:#
 </style></head>
 <body>
 <h1>🌌 BH-OMNI CORE</h1>
-<p>Modular AI Ecosystem - Built on Phone - <b>Phase 7 - Recommendations V9!</b></p>
-<div class="card"><div class="big">246 PASS, 0 FAIL</div><span class="badge">ALL PHASES DONE</span></div>
+<p>Modular AI Ecosystem - Built on Phone - <b>Phase 7 - Quiz Game V10!</b></p>
+<div class="card"><div class="big">254 PASS, 0 FAIL</div><span class="badge">ALL PHASES DONE</span></div>
 <div class="card"><b>🔴 LIVE CHECK</b><br><br>
 <button onclick="checkHealth()">🏥 Health Check</button>
 <button onclick="checkRegression()">🧪 Run Regression</button>
@@ -114,6 +114,30 @@ async function getRec(){
     box.textContent=out;
   }catch(e){ box.textContent='Error: '+e; } }
 </script>
+
+<div class="card"><b>🎮 MINI QUIZ - Phase 7 Step 4!</b><br><br>
+<button onclick="startQuiz()">Start Quiz</button>
+<span id="quizScore" style="font-weight:bold">Score: 0/5</span><br><br>
+<div id="quizBox" style="background:#020617;border-radius:10px;padding:12px;min-height:80px;font-family:monospace;font-size:13px;white-space:pre-wrap">Quiz inge varum! Start Quiz-a press pannu!</div>
+<div id="quizOptions" style="margin-top:10px"></div></div>
+<script>
+let curQ=null;
+async function startQuiz(){
+  const r=await fetch('/api/quiz?action=start'); const j=await r.json();
+  curQ=j; showQ(j); }
+function showQ(j){
+  document.getElementById('quizScore').textContent='Score: '+j.score+'/'+j.total+' | Q'+j.qnum+'/'+j.total;
+  document.getElementById('quizBox').textContent=j.question;
+  const opts=document.getElementById('quizOptions'); opts.innerHTML='';
+  j.options.forEach((o,i)=>{ const b=document.createElement('button'); b.textContent=o; b.style.margin='4px'; b.onclick=()=>answerQ(j.qid,o); opts.appendChild(b); }); }
+async function answerQ(qid,ans){
+  const r=await fetch('/api/quiz?action=answer&qid='+encodeURIComponent(qid)+'&ans='+encodeURIComponent(ans)); const j=await r.json();
+  document.getElementById('quizBox').textContent=(j.correct?'✅ Correct! ':'❌ Wrong! ')+j.explain+(j.done?'\n\n🏆 QUIZ DONE! Final Score: '+j.score+'/'+j.total:'\n\nNext question...');
+  document.getElementById('quizScore').textContent='Score: '+j.score+'/'+j.total;
+  document.getElementById('quizOptions').innerHTML='';
+  if(!j.done){ setTimeout(async()=>{ const r2=await fetch('/api/quiz?action=next'); const j2=await r2.json(); showQ(j2); }, 1500); }
+  else { const b=document.createElement('button'); b.textContent='Play Again'; b.onclick=startQuiz; document.getElementById('quizOptions').appendChild(b); } }
+</script>
 <div class="card"><b>📤 EXPORT</b><br><br>
 <button onclick="exportData()">Export My Data (JSON)</button>
 <div id="exportResult">Export = summary only, NO secrets, NO vault!</div>
@@ -124,7 +148,7 @@ async function getRec(){
 <div class="card"><b>Phase 3 - F-J Systems</b><br>40 PASS</div>
 <div class="card"><b>Phase 4 - Integration</b><br>24 PASS</div>
 <div class="card"><b>Phase 5 - Release</b><br>16 PASS</div>
-<div class="card"><b>Phase 6 - UI</b><br>Step 3 - Recommendations - YOU ARE HERE</div>
+<div class="card"><b>Phase 6 - UI</b><br>Step 4 - Quiz Game - YOU ARE HERE</div>
 </div>
 <div class="card"><b>⚠️ Honest Limitations</b><br><span class="warn">NO REAL TTS / AdMob / Billing / Cloud</span><br>No APK yet - Dashboard only. No fake claims. Ads = local simulation.</div>
 <div class="card"><b>Modules</b><br>security/ • core/ • systems_fj/ • integration/ • release/ • ui/</div>

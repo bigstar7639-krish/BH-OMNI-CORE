@@ -10,3 +10,6 @@
 
 - Recommendations = Rule-based only, NOT ML, NOT AI prediction
 - Based on real Analytics counts + Monetization plan/coins
+
+- Quiz = Fixed 5 questions, in-memory score, NOT real exam, NOT leaderboard
+- Quiz answers stored server-side, NOT in dashboard JS

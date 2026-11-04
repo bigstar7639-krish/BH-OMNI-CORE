@@ -1,5 +1,5 @@
 """
-Phase 7 Step 3 - Recommendations - Settings + Export + Ads Server
+Phase 7 Step 4 - Quiz Game - Settings + Export + Ads Server
 - GET /api/health, /api/regression, /api/story, /api/voice, /api/market, /api/analytics, /api/ads, /api/export
 - Localhost only, NO internet, NO APK, NO real AdMob
 """
@@ -164,6 +164,43 @@ def get_recommend(user="demo"):
     except Exception as ex:
         return {"recommendations": [], "error": str(ex), "note": "Rule-based only"}
 
+
+_QUIZ_QS = [
+    {"qid": "Q1", "question": "BH-OMNI CORE-la total ethana PASS?", "options": ["230", "254", "100", "500"], "answer": "254", "explain": "254 PASS, 0 FAIL - Ellam Termux-la verified!"},
+    {"qid": "Q2", "question": "BH-OMNI Chat - Real LLM-a?", "options": ["Yes - OpenAI", "No - Rule-based demo", "Yes - ChatGPT", "No - No chat"], "answer": "No - Rule-based demo", "explain": "Chat = Rule-based only - NOT real LLM, NOT OpenAI!"},
+    {"qid": "Q3", "question": "AES Encryption-la key size enna?", "options": ["128-bit", "192-bit", "256-bit", "64-bit"], "answer": "256-bit", "explain": "AES-256-GCM - 32-byte key, 12-byte nonce!"},
+    {"qid": "Q4", "question": "Marketplace-la real money use pannroma?", "options": ["Yes - Real money", "No - Coins only, NO real money", "Yes - Play Billing", "No - No marketplace"], "answer": "No - Coins only, NO real money", "explain": "Marketplace = Coins only - NO real money, NO Play Billing!"},
+    {"qid": "Q5", "question": "Dashboard server port enna?", "options": ["3000", "5000", "8000", "8080"], "answer": "8000", "explain": "Port 8000 - http://127.0.0.1:8000/dashboard.html"},
+]
+_QUIZ_STATE = {"idx": 0, "score": 0, "answered": set()}
+def get_quiz(action="start", qid="", ans=""):
+    try:
+        if action == "start":
+            _QUIZ_STATE["idx"] = 0; _QUIZ_STATE["score"] = 0; _QUIZ_STATE["answered"] = set()
+            q = _QUIZ_QS[0]
+            return {"qid": q["qid"], "question": q["question"], "options": q["options"], "score": 0, "total": 5, "qnum": 1}
+        elif action == "answer":
+            q = next((x for x in _QUIZ_QS if x["qid"] == qid), None)
+            if q is None:
+                return {"error": "Invalid qid", "correct": False, "score": _QUIZ_STATE["score"], "total": 5, "done": False, "explain": ""}
+            if qid in _QUIZ_STATE["answered"]:
+                return {"correct": False, "score": _QUIZ_STATE["score"], "total": 5, "done": False, "explain": "Already answered!"}
+            _QUIZ_STATE["answered"].add(qid)
+            correct = (ans == q["answer"])
+            if correct:
+                _QUIZ_STATE["score"] += 1
+            done = len(_QUIZ_STATE["answered"]) >= 5
+            return {"correct": correct, "score": _QUIZ_STATE["score"], "total": 5, "done": done, "explain": q["explain"]}
+        elif action == "next":
+            _QUIZ_STATE["idx"] += 1
+            if _QUIZ_STATE["idx"] >= 5:
+                _QUIZ_STATE["idx"] = 4
+            q = _QUIZ_QS[_QUIZ_STATE["idx"]]
+            return {"qid": q["qid"], "question": q["question"], "options": q["options"], "score": _QUIZ_STATE["score"], "total": 5, "qnum": _QUIZ_STATE["idx"] + 1}
+        return {"error": "Invalid action"}
+    except Exception as ex:
+        return {"error": str(ex)}
+
 def get_analytics(track=False):
     global _ANALYTICS
     try:
@@ -231,7 +268,7 @@ def get_ads(action="show"):
 def get_export():
     try:
         h = get_health()
-        return {"version": "BH-OMNI-CORE v0.6.0 - Phase 7 Step 3 - Recommendations", "total_pass": 214, "health": h.get("overall", "UNKNOWN"), "health_ok": h.get("ok", 0), "modules": 16, "note": "Summary only - NO secrets, NO vault_data, NO PII."}
+        return {"version": "BH-OMNI-CORE v0.6.0 - Phase 7 Step 4 - Quiz Game", "total_pass": 214, "health": h.get("overall", "UNKNOWN"), "health_ok": h.get("ok", 0), "modules": 16, "note": "Summary only - NO secrets, NO vault_data, NO PII."}
     except Exception as ex:
         return {"error": str(ex)}
 class H(SimpleHTTPRequestHandler):
@@ -284,14 +321,18 @@ class H(SimpleHTTPRequestHandler):
             user = parse_qs(urlparse(self.path).query).get("user", ["demo"])[0]
             self.send_json(get_recommend(user))
             return
+        if self.path.startswith("/api/quiz"):
+            qs = parse_qs(urlparse(self.path).query)
+            self.send_json(get_quiz(qs.get("action", ["start"])[0], qs.get("qid", [""])[0], qs.get("ans", [""])[0]))
+            return
         if self.path.startswith("/api/export"):
             self.send_json(get_export())
             return
         return super().do_GET()
 def start_server(port=8000):
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)
-    print(f"BH-OMNI Dashboard V9 - PHASE 7 RECOMMENDATIONS: http://127.0.0.1:{port}/dashboard.html")
-    print("API: health + regression + story + voice + market + analytics + ads + export + chat + search + recommend")
+    print(f"BH-OMNI Dashboard V10 - PHASE 7 QUIZ GAME: http://127.0.0.1:{port}/dashboard.html")
+    print("API: health + regression + story + voice + market + analytics + ads + export + chat + search + recommend + quiz")
     print("Press Ctrl+C to stop")
     srv.serve_forever()
 if __name__ == "__main__":
