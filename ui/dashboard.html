@@ -180,6 +180,27 @@ async function sendMega(msg){
   hh.textContent+='\nMEGA: '+j.reply; hh.scrollTop=hh.scrollHeight;
 }
 </script></div>
+<div class="card"><b>🧠 FULL BRAIN - Phase 37 Step 2! (Full Logic)</b><br><br>
+<div id="brainHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Full Brain Ready! Nee enna kekkurenu purinjikiren!</div><br>
+<input id="brainInput" value="brain joke sollu" style="width:65%" onkeydown="if(event.key==='Enter')sendBrain()">
+<button onclick="sendBrain()">Ask Brain</button>
+<button onclick="sendBrainStatus()">Brain Status</button>
+<script>
+async function sendBrain(){
+  let msg=document.getElementById('brainInput').value;
+  let hh=document.getElementById('brainHistory');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_brain?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nBRAIN: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+async function sendBrainStatus(){
+  let hh=document.getElementById('brainHistory');
+  let r=await fetch('/api/omni_brain?msg='+encodeURIComponent('brain'));
+  let j=await r.json();
+  hh.textContent+='\nBRAIN: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
 <div class="omni-orb-wrap"><div class="omni-orb"></div><div class="omni-orb-label">BH-OMNI CORE - Aurora Orb - CSS Animation Only</div></div>
 <h1>🌌 BH-OMNI CORE</h1>
 <p>Modular AI Ecosystem - Built on Phone - <b>Phase 8 - OMNI INFINITY V12 - SAME PROJECT!</b></p>
