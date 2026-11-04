@@ -1,7 +1,7 @@
 """
-Phase 6 Step 4 - Theme + Analytics Server
-- GET /api/health, /api/regression, /api/story, /api/voice, /api/market, /api/analytics
-- Localhost only, NO internet, NO APK
+Phase 6 Step 5 - Settings + Export + Ads Server
+- GET /api/health, /api/regression, /api/story, /api/voice, /api/market, /api/analytics, /api/ads, /api/export
+- Localhost only, NO internet, NO APK, NO real AdMob
 """
 from pathlib import Path
 import json, sys
@@ -10,6 +10,7 @@ from urllib.parse import urlparse, parse_qs
 BASE = Path(__file__).parent.parent
 sys.path.insert(0, str(BASE))
 _ANALYTICS = None
+_ADS = None
 def get_analytics(track=False):
     global _ANALYTICS
     try:
@@ -59,6 +60,27 @@ def get_market():
         return {"message": "Marketplace demo - NO real money!", "balance": 100, "items": len(items) if isinstance(items, list) else str(items)}
     except Exception as ex:
         return {"message": "Marketplace demo", "balance": 100, "items": "demo", "note": str(ex)}
+def get_ads(action="show"):
+    global _ADS
+    try:
+        from systems_fj.ads_engine import AdsEngine
+        if _ADS is None:
+            _ADS = AdsEngine()
+            _ADS.create("demo_ad", "BH-OMNI Demo Ad", "banner", 0)
+        if action == "click":
+            _ADS.click("demo_ad")
+        else:
+            _ADS.show("demo_ad", "dashboard_user")
+        st = _ADS.stats("demo_ad")
+        return {"title": "BH-OMNI Demo Ad", "type": "banner", "label": "SPONSORED", "impressions": st["impressions"], "clicks": st["clicks"], "ctr_percent": st["ctr_percent"], "note": "Local simulation - NO real AdMob, NO real revenue. Freq cap 5/day."}
+    except Exception as ex:
+        return {"error": str(ex), "note": "Local simulation - NO real AdMob"}
+def get_export():
+    try:
+        h = get_health()
+        return {"version": "BH-OMNI-CORE v0.6.0 - Phase 6 Step 5", "total_pass": 214, "health": h.get("overall", "UNKNOWN"), "health_ok": h.get("ok", 0), "modules": 16, "note": "Summary only - NO secrets, NO vault_data, NO PII."}
+    except Exception as ex:
+        return {"error": str(ex)}
 class H(SimpleHTTPRequestHandler):
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=str(Path(__file__).parent), **kw)
@@ -93,11 +115,18 @@ class H(SimpleHTTPRequestHandler):
             track = "track=1" in self.path
             self.send_json(get_analytics(track=track))
             return
+        if self.path.startswith("/api/ads"):
+            action = parse_qs(urlparse(self.path).query).get("action", ["show"])[0]
+            self.send_json(get_ads(action=action))
+            return
+        if self.path.startswith("/api/export"):
+            self.send_json(get_export())
+            return
         return super().do_GET()
 def start_server(port=8000):
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)
-    print(f"BH-OMNI Dashboard V4: http://127.0.0.1:{port}/dashboard.html")
-    print("API: /api/health + /api/regression + /api/story + /api/voice + /api/market + /api/analytics")
+    print(f"BH-OMNI Dashboard V5: http://127.0.0.1:{port}/dashboard.html")
+    print("API: health + regression + story + voice + market + analytics + ads + export")
     print("Press Ctrl+C to stop")
     srv.serve_forever()
 if __name__ == "__main__":

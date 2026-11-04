@@ -1,42 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BH-OMNI CORE - Theme + Analytics V4</title>
+<title>BH-OMNI CORE - Settings + Export + Ads V5</title>
 <style>
 body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:20px}
 h1{color:#38bdf8} .card{background:#1e293b;border-radius:12px;padding:16px;margin:12px 0}
 .big{font-size:32px;color:#4ade80} .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .badge{background:#4ade80;color:#000;padding:4px 10px;border-radius:20px;font-weight:700}
 .warn{background:#facc15;color:#000;padding:4px 10px;border-radius:20px;font-weight:700}
+.sponsored{background:#f97316;color:#fff;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700}
 button{background:#38bdf8;color:#000;border:0;padding:12px 18px;border-radius:10px;font-weight:700;font-size:16px;margin:6px 6px 6px 0;cursor:pointer}
-#result,#playResult,#analyticsResult{background:#020617;border-radius:10px;padding:14px;white-space:pre-wrap;font-family:monospace;font-size:13px;min-height:60px}
+#result,#playResult,#analyticsResult,#adsResult,#exportResult{background:#020617;border-radius:10px;padding:14px;white-space:pre-wrap;font-family:monospace;font-size:13px;min-height:60px}
 a{color:#38bdf8}
 input,select{padding:8px;border-radius:8px;border:0}
-body.light{background:#f1f5f9;color:#0f172a} body.light .card{background:#fff;color:#0f172a} body.light #result,body.light #playResult,body.light #analyticsResult{background:#e2e8f0;color:#0f172a}
-body.neon{background:#000;color:#00ff88} body.neon .card{background:#111;color:#00ff88;border:1px solid #00ff88} body.neon h1{color:#ff00ff} body.neon button{background:#ff00ff;color:#fff} body.neon #result,body.neon #playResult,body.neon #analyticsResult{background:#000;color:#00ff88;border:1px solid #00ff88}
+body.light{background:#f1f5f9;color:#0f172a} body.light .card{background:#fff;color:#0f172a} body.light #result,body.light #playResult,body.light #analyticsResult,body.light #adsResult,body.light #exportResult{background:#e2e8f0;color:#0f172a}
+body.neon{background:#000;color:#00ff88} body.neon .card{background:#111;color:#00ff88;border:1px solid #00ff88} body.neon h1{color:#ff00ff} body.neon button{background:#ff00ff;color:#fff} body.neon #result,body.neon #playResult,body.neon #analyticsResult,body.neon #adsResult,body.neon #exportResult{background:#000;color:#00ff88;border:1px solid #00ff88}
 </style></head>
 <body>
 <h1>🌌 BH-OMNI CORE</h1>
-<p>Modular AI Ecosystem - Built on Phone - <b>Theme + Analytics V4!</b></p>
-<div class="card"><div class="big">206 PASS, 0 FAIL</div><span class="badge">ALL PHASES DONE</span></div>
+<p>Modular AI Ecosystem - Built on Phone - <b>Settings + Export + Ads V5!</b></p>
+<div class="card"><div class="big">214 PASS, 0 FAIL</div><span class="badge">ALL PHASES DONE</span></div>
 <div class="card"><b>🔴 LIVE CHECK</b><br><br>
 <button onclick="checkHealth()">🏥 Health Check</button>
 <button onclick="checkRegression()">🧪 Run Regression</button>
 <button onclick="showModules()">📦 Show Modules</button>
 <div id="result">Click a button!</div>
 </div>
-<div class="card"><b>🎨 THEME - Choose Pannu!</b><br><br>
+<div class="card"><b>🎨 THEME</b><br><br>
 <button onclick="setTheme('dark')">🌙 Dark</button>
 <button onclick="setTheme('light')">☀️ Light</button>
 <button onclick="setTheme('neon')">⚡ Neon</button>
 <span id="themeNow">Current: Dark</span>
+</div>
+<div class="card"><b>⚙️ SETTINGS</b><br><br>
+<b>Language:</b> <select id="langSelect"><option>Tanglish</option><option>Tamil</option><option>English</option><option>Hindi</option></select>
+<b>Notifications:</b> <select id="notifSelect"><option>ON</option><option>OFF</option></select>
+<button onclick="saveSettings()">Save Settings</button>
+<div id="settingsResult" style="font-family:monospace;margin-top:8px">Settings not saved yet - saved in browser only!</div>
 </div>
 <div class="card"><b>📊 LIVE ANALYTICS</b><br><br>
 <button onclick="showAnalytics()">Show Analytics</button>
 <button onclick="trackEvent()">Track My Visit</button>
 <div id="analyticsResult">Click Show Analytics!</div>
 </div>
-<div class="card"><b>🎮 MINI APP PLAYGROUND - Try Pannu!</b><br><br>
+<div class="card"><b>🎮 MINI APP PLAYGROUND</b><br><br>
 <b>📖 Story:</b> <input id="storyTitle" value="En First Story" style="width:55%">
 <button onclick="createStory()">Create Story</button><br><br>
 <b>🎙️ Voice:</b> <select id="voiceName"><option>Aria</option><option>Leo</option><option>Maya</option><option>Zara</option><option>Kai</option><option>Nova</option></select>
@@ -44,26 +51,40 @@ body.neon{background:#000;color:#00ff88} body.neon .card{background:#111;color:#
 <b>🛒 Marketplace:</b> <button onclick="buyItem()">Buy Item (10 coins)</button>
 <div id="playResult">Try a button above!</div>
 </div>
+<div class="card"><b>📢 ADS DEMO <span class="sponsored">SPONSORED</span></b><br><br>
+<button onclick="showAd()">Show Ad</button>
+<button onclick="clickAd()">Click Ad</button>
+<div id="adsResult">Ads are LOCAL simulation - NO real AdMob, NO real revenue!</div>
+</div>
+<div class="card"><b>📤 EXPORT</b><br><br>
+<button onclick="exportData()">Export My Data (JSON)</button>
+<div id="exportResult">Export = summary only, NO secrets, NO vault!</div>
+</div>
 <div class="grid">
 <div class="card"><b>Phase 1 - Security</b><br>62 PASS</div>
 <div class="card"><b>Phase 2 - Core</b><br>40 PASS</div>
 <div class="card"><b>Phase 3 - F-J Systems</b><br>40 PASS</div>
 <div class="card"><b>Phase 4 - Integration</b><br>24 PASS</div>
 <div class="card"><b>Phase 5 - Release</b><br>16 PASS</div>
-<div class="card"><b>Phase 6 - UI</b><br>Step 4 - Theme + Analytics - YOU ARE HERE</div>
+<div class="card"><b>Phase 6 - UI</b><br>Step 5 - Settings + Export + Ads - YOU ARE HERE</div>
 </div>
-<div class="card"><b>⚠️ Honest Limitations</b><br><span class="warn">NO REAL TTS / AdMob / Billing / Cloud</span><br>No APK yet - Dashboard only. No fake claims.</div>
+<div class="card"><b>⚠️ Honest Limitations</b><br><span class="warn">NO REAL TTS / AdMob / Billing / Cloud</span><br>No APK yet - Dashboard only. No fake claims. Ads = local simulation.</div>
 <div class="card"><b>Modules</b><br>security/ • core/ • systems_fj/ • integration/ • release/ • ui/</div>
 <script>
 function setTheme(name){ document.body.className = name==='dark' ? '' : name; document.getElementById('themeNow').textContent='Current: '+name; try{ localStorage.setItem('bh-theme', name); }catch(e){} }
 try{ const saved=localStorage.getItem('bh-theme'); if(saved) setTheme(saved); }catch(e){}
+function saveSettings(){ const lang=document.getElementById('langSelect').value; const notif=document.getElementById('notifSelect').value; try{ localStorage.setItem('bh-lang', lang); localStorage.setItem('bh-notif', notif); }catch(e){} document.getElementById('settingsResult').textContent='SAVED! Language: '+lang+' | Notifications: '+notif+' (browser only)'; }
+try{ const l=localStorage.getItem('bh-lang'); if(l) document.getElementById('langSelect').value=l; const n=localStorage.getItem('bh-notif'); if(n) document.getElementById('notifSelect').value=n; }catch(e){}
 async function checkHealth(){ document.getElementById('result').textContent='Checking...'; try{ const r=await fetch('/api/health'); const j=await r.json(); document.getElementById('result').textContent='HEALTH: '+j.overall+'\nOK: '+j.ok+'/'+j.total; }catch(e){ document.getElementById('result').textContent='Error: '+e; } }
 async function checkRegression(){ document.getElementById('result').textContent='Running...'; try{ const r=await fetch('/api/regression'); const j=await r.json(); document.getElementById('result').textContent='REGRESSION: '+j.overall+'\nPASS: '+j.passed+'/'+j.total; }catch(e){ document.getElementById('result').textContent='Error: '+e; } }
 async function showModules(){ document.getElementById('result').textContent='Modules:\n- security/\n- core/\n- systems_fj/\n- integration/\n- release/\n- ui/'; }
-async function showAnalytics(){ document.getElementById('analyticsResult').textContent='Loading...'; try{ const r=await fetch('/api/analytics'); const j=await r.json(); document.getElementById('analyticsResult').textContent='ANALYTICS:\nTotal Events: '+j.total_events+'\nUnique Users: '+j.unique_users+'\nTop Events: '+JSON.stringify(j.top_events)+'\nNote: '+j.note; }catch(e){ document.getElementById('analyticsResult').textContent='Error: '+e; } }
-async function trackEvent(){ try{ const r=await fetch('/api/analytics?track=1'); const j=await r.json(); document.getElementById('analyticsResult').textContent='TRACKED! ✅\nTotal Events: '+j.total_events+'\nUnique Users: '+j.unique_users; }catch(e){ document.getElementById('analyticsResult').textContent='Error: '+e; } }
-async function createStory(){ const title=document.getElementById('storyTitle').value||'Untitled'; document.getElementById('playResult').textContent='Creating...'; try{ const r=await fetch('/api/story?title='+encodeURIComponent(title)); const j=await r.json(); document.getElementById('playResult').textContent='STORY CREATED!\nTitle: '+j.title+'\nID: '+j.story_id+'\nChapters: '+j.chapters; }catch(e){ document.getElementById('playResult').textContent='Error: '+e; } }
+async function showAnalytics(){ document.getElementById('analyticsResult').textContent='Loading...'; try{ const r=await fetch('/api/analytics'); const j=await r.json(); document.getElementById('analyticsResult').textContent='ANALYTICS:\nTotal Events: '+j.total_events+'\nUnique Users: '+j.unique_users+'\nNote: '+j.note; }catch(e){ document.getElementById('analyticsResult').textContent='Error: '+e; } }
+async function trackEvent(){ try{ const r=await fetch('/api/analytics?track=1'); const j=await r.json(); document.getElementById('analyticsResult').textContent='TRACKED! ✅\nTotal Events: '+j.total_events; }catch(e){ document.getElementById('analyticsResult').textContent='Error: '+e; } }
+async function createStory(){ const title=document.getElementById('storyTitle').value||'Untitled'; document.getElementById('playResult').textContent='Creating...'; try{ const r=await fetch('/api/story?title='+encodeURIComponent(title)); const j=await r.json(); document.getElementById('playResult').textContent='STORY CREATED!\nTitle: '+j.title+'\nChapters: '+j.chapters; }catch(e){ document.getElementById('playResult').textContent='Error: '+e; } }
 async function tryVoice(){ const v=document.getElementById('voiceName').value; document.getElementById('playResult').textContent='Trying...'; try{ const r=await fetch('/api/voice?name='+encodeURIComponent(v)); const j=await r.json(); document.getElementById('playResult').textContent='VOICE: '+j.voice+'\nNote: '+j.note; }catch(e){ document.getElementById('playResult').textContent='Error: '+e; } }
-async function buyItem(){ document.getElementById('playResult').textContent='Buying...'; try{ const r=await fetch('/api/market'); const j=await r.json(); document.getElementById('playResult').textContent='MARKETPLACE:\n'+j.message+'\nBalance: '+j.balance+' coins\nItems: '+j.items; }catch(e){ document.getElementById('playResult').textContent='Error: '+e; } }
+async function buyItem(){ document.getElementById('playResult').textContent='Buying...'; try{ const r=await fetch('/api/market'); const j=await r.json(); document.getElementById('playResult').textContent='MARKETPLACE:\n'+j.message+'\nBalance: '+j.balance; }catch(e){ document.getElementById('playResult').textContent='Error: '+e; } }
+async function showAd(){ document.getElementById('adsResult').textContent='Loading ad...'; try{ const r=await fetch('/api/ads?action=show'); const j=await r.json(); document.getElementById('adsResult').textContent='[SPONSORED] '+j.title+'\nType: '+j.type+' | Impressions: '+j.impressions+'\n'+j.note; }catch(e){ document.getElementById('adsResult').textContent='Error: '+e; } }
+async function clickAd(){ try{ const r=await fetch('/api/ads?action=click'); const j=await r.json(); document.getElementById('adsResult').textContent='AD CLICKED! ✅\nClicks: '+j.clicks+' | CTR: '+j.ctr_percent+'%\n'+j.note; }catch(e){ document.getElementById('adsResult').textContent='Error: '+e; } }
+async function exportData(){ document.getElementById('exportResult').textContent='Exporting...'; try{ const r=await fetch('/api/export'); const j=await r.json(); document.getElementById('exportResult').textContent='EXPORT READY!\nVersion: '+j.version+'\nTotal PASS: '+j.total_pass+'\nHealth: '+j.health+'\nNote: '+j.note; }catch(e){ document.getElementById('exportResult').textContent='Error: '+e; } }
 </script>
 </body></html>
