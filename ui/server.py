@@ -223,6 +223,15 @@ def get_omni_memory(msg="memory"):
         return {"reply": f"Memory error: {ex}"}
 
 
+def get_omni_goal(msg="goals"):
+    try:
+        from omni_goal import handle_goal
+        r = handle_goal(msg)
+        if r is None:
+            r = "Goal illa da! 'goal add Learn Python' nu add pannu!"
+        return {"reply": r, "source": "omni_goal.py - SAME PROJECT"}
+    except Exception as e:
+        return {"reply": f"Goal error: {e}", "source": "omni_goal.py"}
 def get_omni_water(msg="water count"):
     try:
         from omni_water import handle_water
@@ -406,6 +415,9 @@ class H(SimpleHTTPRequestHandler):
             msg = parse_qs(urlparse(self.path).query).get("msg", ["memory"])[0]
             self.send_json(get_omni_memory(msg))
             return
+        if self.path.startswith("/api/omni_goal"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "goals"
+            self.send_json(get_omni_goal(msg))
         if self.path.startswith("/api/omni_water"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "water count"
             self.send_json(get_omni_water(msg))

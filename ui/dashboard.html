@@ -173,6 +173,20 @@ async function sendMem(){
     h.textContent += '\nOMNI MEMORY: '+j.reply; h.scrollTop=h.scrollHeight;
   }catch(e){ h.textContent += '\nError: '+e; } }
 </script>
+<div class="card"><b>🎯 OMNI GOAL TRACKER - Phase 13 Step 2!</b><br><br>
+<div id="goalHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Goal Tracker Ready!</div><br>
+<input id="goalInput" value="goals" style="width:65%" onkeydown="if(event.key==='Enter')sendGoal()">
+<button onclick="sendGoal()">Send Goal</button>
+<script>
+async function sendGoal(){
+  let msg=document.getElementById('goalInput').value;
+  let h=document.getElementById('goalHistory');
+  h.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_goal?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  h.textContent+='\nGOAL: '+j.reply; h.scrollTop=h.scrollHeight;
+}
+</script></div>
 <div class="card"><b>💧 OMNI WATER REMINDER - Phase 12 Step 2!</b><br><br>
 <div id="waterHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Water Reminder Ready!</div><br>
 <input id="waterInput" value="water count" style="width:65%" onkeydown="if(event.key==='Enter')sendWater()">
