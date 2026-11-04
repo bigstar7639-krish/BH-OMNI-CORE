@@ -173,6 +173,20 @@ async function sendMem(){
     h.textContent += '\nOMNI MEMORY: '+j.reply; h.scrollTop=h.scrollHeight;
   }catch(e){ h.textContent += '\nError: '+e; } }
 </script>
+<div class="card"><b>💧 OMNI WATER REMINDER - Phase 12 Step 2!</b><br><br>
+<div id="waterHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Water Reminder Ready!</div><br>
+<input id="waterInput" value="water count" style="width:65%" onkeydown="if(event.key==='Enter')sendWater()">
+<button onclick="sendWater()">Send Water</button>
+<script>
+async function sendWater(){
+  let msg=document.getElementById('waterInput').value;
+  let h=document.getElementById('waterHistory');
+  h.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_water?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  h.textContent+='\nWATER: '+j.reply; h.scrollTop=h.scrollHeight;
+}
+</script></div>
 <div class="card"><b>📚 OMNI FLASHCARDS - Phase 11 Step 2!</b><br><br>
 <div id="flashHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Flashcards Ready!</div><br>
 <input id="flashInput" value="flashcards" style="width:65%" onkeydown="if(event.key==='Enter')sendFlash()">

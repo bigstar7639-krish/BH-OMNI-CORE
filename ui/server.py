@@ -223,6 +223,15 @@ def get_omni_memory(msg="memory"):
         return {"reply": f"Memory error: {ex}"}
 
 
+def get_omni_water(msg="water count"):
+    try:
+        from omni_water import handle_water
+        r = handle_water(msg)
+        if r is None:
+            r = "Water: 'water' nu type pannu da!"
+        return {"reply": r, "source": "omni_water.py - SAME PROJECT"}
+    except Exception as e:
+        return {"reply": f"Water error: {e}", "source": "omni_water.py"}
 def get_omni_flash(msg="flashcards"):
     try:
         from omni_flash import handle_flash
@@ -397,6 +406,9 @@ class H(SimpleHTTPRequestHandler):
             msg = parse_qs(urlparse(self.path).query).get("msg", ["memory"])[0]
             self.send_json(get_omni_memory(msg))
             return
+        if self.path.startswith("/api/omni_water"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "water count"
+            self.send_json(get_omni_water(msg))
         if self.path.startswith("/api/omni_flash"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "flashcards"
             self.send_json(get_omni_flash(msg))
