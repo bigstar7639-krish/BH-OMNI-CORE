@@ -7,7 +7,7 @@
 - DO NOT CLAIM real TTS / real AI story generation without real engine
 - PHASE 3: F-J Systems - Step 1/5
 
-## Step 2 - System G - Ads + Monetization
-- Ads: Local simulation, NO real AdMob, NO real revenue
-- Monetization: Local coins/plans, NO real Play Billing, NO real money
-- Limitations: In-memory, no payment gateway, freq cap per session only
+## Step 4 - System I - Sync + Backup
+- Sync: In-memory simulation, Last-Write-Wins, no real cloud
+- Backup: In-memory SHA256 manifest, no real file/cloud backup
+- Limitations: No real network, no encryption at rest for backup (use Phase 1 vault for secrets)
