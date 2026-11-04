@@ -5,5 +5,3 @@ step*_test_results.json
 *.log
 vault_data.json
 security/vault_data.json
-vault_data.json
-security/vault_data.json
