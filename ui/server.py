@@ -295,6 +295,24 @@ def get_omni_budget(msg="Budget: 'budget'"):
         return {"reply": r, "source": "omni_budget.py - ONE-SHOT"}
     except Exception as e:
         return {"reply": f"budget error: {e}", "source": "omni_budget.py"}
+def get_omni_smarthome(msg="home"):
+    try:
+        from omni_smarthome import handle_smarthome
+        r = handle_smarthome(msg)
+        if r is None:
+            r = "home nu try pannu da!"
+        return {"reply": r, "source": "omni_smarthome.py - FINAL"}
+    except Exception as e:
+        return {"reply": f"smarthome error: {e}", "source": "omni_smarthome.py"}
+def get_omni_automation(msg="auto"):
+    try:
+        from omni_automation import handle_automation
+        r = handle_automation(msg)
+        if r is None:
+            r = "auto nu try pannu da!"
+        return {"reply": r, "source": "omni_automation.py - FINAL"}
+    except Exception as e:
+        return {"reply": f"automation error: {e}", "source": "omni_automation.py"}
 def get_omni_brain(msg="brain"):
     try:
         from omni_brain_full import handle_brain
@@ -673,6 +691,12 @@ class H(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/omni_budget"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "Budget: 'budget'"
             self.send_json(get_omni_budget(msg))
+        if self.path.startswith("/api/omni_smarthome"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "home"
+            self.send_json(get_omni_smarthome(msg))
+        if self.path.startswith("/api/omni_automation"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "auto"
+            self.send_json(get_omni_automation(msg))
         if self.path.startswith("/api/omni_brain"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "brain"
             self.send_json(get_omni_brain(msg))

@@ -296,6 +296,34 @@ async function sendBudget{
   hh.textContent+='\nBUDGET: '+j.reply; hh.scrollTop=hh.scrollHeight;
 }
 </script></div>
+<div class="card"><b>🏠 OMNI SMART HOME - Final! (Simulation)</b><br><br>
+<div id="smarthomeHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Home Ready!</div><br>
+<input id="smarthomeInput" value="home" style="width:65%" onkeydown="if(event.key==='Enter')sendSmarthome()">
+<button onclick="sendSmarthome()">Send Home</button>
+<script>
+async function sendSmarthome{
+  let msg=document.getElementById('smarthomeInput').value;
+  let hh=document.getElementById('smarthomeHistory');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_smarthome?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nHOME: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
+<div class="card"><b>🤖 OMNI AUTOMATION - Final!</b><br><br>
+<div id="automationHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Auto Ready!</div><br>
+<input id="automationInput" value="auto" style="width:65%" onkeydown="if(event.key==='Enter')sendAutomation()">
+<button onclick="sendAutomation()">Send Auto</button>
+<script>
+async function sendAutomation{
+  let msg=document.getElementById('automationInput').value;
+  let hh=document.getElementById('automationHistory');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_automation?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nAUTO: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
 <div class="omni-orb-wrap"><div class="omni-orb"></div><div class="omni-orb-label">BH-OMNI CORE - Aurora Orb - CSS Animation Only</div></div>
 <h1>🌌 BH-OMNI CORE</h1>
 <p>Modular AI Ecosystem - Built on Phone - <b>Phase 8 - OMNI INFINITY V12 - SAME PROJECT!</b></p>
