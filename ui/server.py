@@ -543,7 +543,7 @@ class H(SimpleHTTPRequestHandler):
         return super().do_GET()
 def start_server(port=8000):
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)
-    print(f"BH-OMNI Dashboard V12 - PHASE 8 OMNI INFINITY - SAME PROJECT: http://127.0.0.1:{port}/dashboard.html")
+    print(f"BH-OMNI Dashboard V22 - PHASE 8 OMNI INFINITY - SAME PROJECT: http://127.0.0.1:{port}/dashboard.html")
     print("API: health + regression + story + voice + market + analytics + ads + export + chat + search + recommend + quiz + omni")
     print("Press Ctrl+C to stop")
     srv.serve_forever()
