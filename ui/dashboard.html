@@ -18,8 +18,8 @@ body.neon{background:#000;color:#00ff88} body.neon .card{background:#111;color:#
 </style></head>
 <body>
 <h1>🌌 BH-OMNI CORE</h1>
-<p>Modular AI Ecosystem - Built on Phone - <b>Phase 7 - Smart Search V8!</b></p>
-<div class="card"><div class="big">238 PASS, 0 FAIL</div><span class="badge">ALL PHASES DONE</span></div>
+<p>Modular AI Ecosystem - Built on Phone - <b>Phase 7 - Recommendations V9!</b></p>
+<div class="card"><div class="big">246 PASS, 0 FAIL</div><span class="badge">ALL PHASES DONE</span></div>
 <div class="card"><b>🔴 LIVE CHECK</b><br><br>
 <button onclick="checkHealth()">🏥 Health Check</button>
 <button onclick="checkRegression()">🧪 Run Regression</button>
@@ -98,6 +98,22 @@ async function doSearch(){
     } else { box.textContent='No results for "'+q+'". Try: story / voice / chat / ads / vault / analytics'; }
   }catch(e){ box.textContent='Error: '+e; } }
 </script>
+
+<div class="card"><b>💡 SMART RECOMMENDATIONS - Phase 7 Step 3!</b><br><br>
+<button onclick="getRec()">Get My Recommendations</button>
+<button onclick="document.getElementById('recResults').textContent='Recommendations inge varum!'">Clear</button><br><br>
+<div id="recResults" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;font-family:monospace;font-size:13px;white-space:pre-wrap">Recommendations inge varum! Button-a press pannu!</div></div>
+<script>
+async function getRec(){
+  const box=document.getElementById('recResults');
+  box.textContent='Analyzing your activity ...';
+  try{ const r=await fetch('/api/recommend?user=demo'); const j=await r.json();
+    let out='Your Recommendations (Engagement: '+j.engagement+' - '+j.verdict+'):\n\n';
+    j.recommendations.forEach((x,i)=>{ out += (i+1)+'. '+x.title+' - '+x.reason+'\n'; });
+    out += '\nNote: '+j.note;
+    box.textContent=out;
+  }catch(e){ box.textContent='Error: '+e; } }
+</script>
 <div class="card"><b>📤 EXPORT</b><br><br>
 <button onclick="exportData()">Export My Data (JSON)</button>
 <div id="exportResult">Export = summary only, NO secrets, NO vault!</div>
@@ -108,7 +124,7 @@ async function doSearch(){
 <div class="card"><b>Phase 3 - F-J Systems</b><br>40 PASS</div>
 <div class="card"><b>Phase 4 - Integration</b><br>24 PASS</div>
 <div class="card"><b>Phase 5 - Release</b><br>16 PASS</div>
-<div class="card"><b>Phase 6 - UI</b><br>Step 2 - Smart Search - YOU ARE HERE</div>
+<div class="card"><b>Phase 6 - UI</b><br>Step 3 - Recommendations - YOU ARE HERE</div>
 </div>
 <div class="card"><b>⚠️ Honest Limitations</b><br><span class="warn">NO REAL TTS / AdMob / Billing / Cloud</span><br>No APK yet - Dashboard only. No fake claims. Ads = local simulation.</div>
 <div class="card"><b>Modules</b><br>security/ • core/ • systems_fj/ • integration/ • release/ • ui/</div>

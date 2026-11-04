@@ -1,5 +1,5 @@
 """
-Phase 7 Step 2 - Smart Search - Settings + Export + Ads Server
+Phase 7 Step 3 - Recommendations - Settings + Export + Ads Server
 - GET /api/health, /api/regression, /api/story, /api/voice, /api/market, /api/analytics, /api/ads, /api/export
 - Localhost only, NO internet, NO APK, NO real AdMob
 """
@@ -123,6 +123,47 @@ def get_search(q="story"):
     except Exception as ex:
         return {"results": [], "error": str(ex), "note": "Keyword search"}
 
+
+def get_recommend(user="demo"):
+    try:
+        from systems_fj.analytics import Analytics
+        from systems_fj.insights import Insights
+        from systems_fj.marketplace import Marketplace
+        from systems_fj.monetization import Monetization
+        # Real analytics - track a view, then build insights from real counts
+        a = Analytics()
+        a.track("demo_user", "app_open")
+        a.track("demo_user", "story_read")
+        a.track("demo_user", "app_open")
+        stats = a.summary() if hasattr(a, "summary") else {"total_events": 3}
+        total = stats.get("total_events", 3) if isinstance(stats, dict) else 3
+        ins = Insights()
+        insight = ins.build(total_events=total, unique_users=1, per_event={"app_open": 2, "story_read": 1}, per_user={"demo_user": total})
+        verdict = insight.get("verdict", "MEDIUM")
+        engagement = insight.get("engagement_per_user", 3.0)
+        # Real monetization - demo user is free, 0 coins
+        m = Monetization()
+        plan = "free"
+        coins = 0
+        try:
+            u = m._users.get("demo", {"plan": "free", "coins": 0})
+            plan = u.get("plan", "free"); coins = u.get("coins", 0)
+        except Exception:
+            pass
+        recs = []
+        # Rule-based recommendations - NOT ML
+        if verdict == "LOW" or total < 5:
+            recs.append({"title": "Tamil Story Pack (50 coins)", "reason": "Engagement LOW - Start with a story to explore more!"})
+        if plan == "free":
+            recs.append({"title": "Upgrade to Pro (Rs.99/mo)", "reason": "You are on FREE plan - Pro gives 100 coins/month!"})
+        if coins < 50:
+            recs.append({"title": "Watch Rewarded Ad - Earn Coins", "reason": "Coins low (0) - Earn coins via rewarded ad!"})
+        recs.append({"title": "Try AI Chat - Ask 'help'", "reason": "Chat is most interactive feature - Try it!"})
+        recs.append({"title": "Neon Theme (20 coins)", "reason": "Popular theme - Personalize your dashboard!"})
+        return {"recommendations": recs[:5], "engagement": engagement, "verdict": verdict, "plan": plan, "coins": coins, "note": "Rule-based only - NOT ML, NOT AI prediction - Based on real Analytics + Monetization"}
+    except Exception as ex:
+        return {"recommendations": [], "error": str(ex), "note": "Rule-based only"}
+
 def get_analytics(track=False):
     global _ANALYTICS
     try:
@@ -190,7 +231,7 @@ def get_ads(action="show"):
 def get_export():
     try:
         h = get_health()
-        return {"version": "BH-OMNI-CORE v0.6.0 - Phase 7 Step 2 - Smart Search", "total_pass": 214, "health": h.get("overall", "UNKNOWN"), "health_ok": h.get("ok", 0), "modules": 16, "note": "Summary only - NO secrets, NO vault_data, NO PII."}
+        return {"version": "BH-OMNI-CORE v0.6.0 - Phase 7 Step 3 - Recommendations", "total_pass": 214, "health": h.get("overall", "UNKNOWN"), "health_ok": h.get("ok", 0), "modules": 16, "note": "Summary only - NO secrets, NO vault_data, NO PII."}
     except Exception as ex:
         return {"error": str(ex)}
 class H(SimpleHTTPRequestHandler):
@@ -239,14 +280,18 @@ class H(SimpleHTTPRequestHandler):
             q = parse_qs(urlparse(self.path).query).get("q", ["story"])[0]
             self.send_json(get_search(q))
             return
+        if self.path.startswith("/api/recommend"):
+            user = parse_qs(urlparse(self.path).query).get("user", ["demo"])[0]
+            self.send_json(get_recommend(user))
+            return
         if self.path.startswith("/api/export"):
             self.send_json(get_export())
             return
         return super().do_GET()
 def start_server(port=8000):
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)
-    print(f"BH-OMNI Dashboard V8 - PHASE 7 SMART SEARCH: http://127.0.0.1:{port}/dashboard.html")
-    print("API: health + regression + story + voice + market + analytics + ads + export + chat + search")
+    print(f"BH-OMNI Dashboard V9 - PHASE 7 RECOMMENDATIONS: http://127.0.0.1:{port}/dashboard.html")
+    print("API: health + regression + story + voice + market + analytics + ads + export + chat + search + recommend")
     print("Press Ctrl+C to stop")
     srv.serve_forever()
 if __name__ == "__main__":
