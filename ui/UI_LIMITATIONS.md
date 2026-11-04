@@ -1,6 +1,7 @@
-# UI Limitations - Phase 6 Step 2
+# UI Limitations - Phase 6 Step 3
 
-- Dashboard V2 = HTML + Local API only, NOT Android APK
-- API = /api/health + /api/regression, localhost only
-- Buttons call REAL Python functions, NOT fake data
+- Dashboard V3 Playground = HTML + Local API, NOT Android APK
+- Playground uses REAL modules: StoryEngine, VoiceEngine (metadata only), Marketplace (no real money)
+- Voice = metadata only, NO real TTS audio
+- Marketplace = NO real money
 - DO NOT CLAIM APK built

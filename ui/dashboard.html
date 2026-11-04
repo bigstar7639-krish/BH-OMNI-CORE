@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BH-OMNI CORE - Interactive Dashboard</title>
+<title>BH-OMNI CORE - Playground V3</title>
 <style>
 body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:20px}
 h1{color:#38bdf8} .card{background:#1e293b;border-radius:12px;padding:16px;margin:12px 0}
@@ -9,19 +9,27 @@ h1{color:#38bdf8} .card{background:#1e293b;border-radius:12px;padding:16px;margi
 .badge{background:#4ade80;color:#000;padding:4px 10px;border-radius:20px;font-weight:700}
 .warn{background:#facc15;color:#000;padding:4px 10px;border-radius:20px;font-weight:700}
 button{background:#38bdf8;color:#000;border:0;padding:12px 18px;border-radius:10px;font-weight:700;font-size:16px;margin:6px 6px 6px 0;cursor:pointer}
-button:active{opacity:.8}
-#result{background:#020617;border-radius:10px;padding:14px;white-space:pre-wrap;font-family:monospace;font-size:13px;min-height:60px}
+#result,#playResult{background:#020617;border-radius:10px;padding:14px;white-space:pre-wrap;font-family:monospace;font-size:13px;min-height:60px}
 a{color:#38bdf8}
+input,select{padding:8px;border-radius:8px;border:0}
 </style></head>
 <body>
 <h1>🌌 BH-OMNI CORE</h1>
-<p>Modular AI Ecosystem - Built on Phone - <b>Interactive V2!</b></p>
-<div class="card"><div class="big">190 PASS, 0 FAIL</div><span class="badge">ALL PHASES DONE</span></div>
-<div class="card"><b>🔴 LIVE CHECK - Buttons-a Click Pannu!</b><br><br>
+<p>Modular AI Ecosystem - Built on Phone - <b>Playground V3!</b></p>
+<div class="card"><div class="big">198 PASS, 0 FAIL</div><span class="badge">ALL PHASES DONE</span></div>
+<div class="card"><b>🔴 LIVE CHECK</b><br><br>
 <button onclick="checkHealth()">🏥 Health Check</button>
 <button onclick="checkRegression()">🧪 Run Regression</button>
 <button onclick="showModules()">📦 Show Modules</button>
-<div id="result">Click a button to see LIVE result from Python!</div>
+<div id="result">Click a button to see LIVE result!</div>
+</div>
+<div class="card"><b>🎮 MINI APP PLAYGROUND - Try Pannu!</b><br><br>
+<b>📖 Story:</b> <input id="storyTitle" value="En First Story" style="width:55%">
+<button onclick="createStory()">Create Story</button><br><br>
+<b>🎙️ Voice:</b> <select id="voiceName"><option>Aria</option><option>Leo</option><option>Maya</option><option>Zara</option><option>Kai</option><option>Nova</option></select>
+<button onclick="tryVoice()">Try Voice</button><br><br>
+<b>🛒 Marketplace:</b> <button onclick="buyItem()">Buy Item (10 coins)</button>
+<div id="playResult">Try a button above!</div>
 </div>
 <div class="grid">
 <div class="card"><b>Phase 1 - Security</b><br>62 PASS</div>
@@ -29,7 +37,7 @@ a{color:#38bdf8}
 <div class="card"><b>Phase 3 - F-J Systems</b><br>40 PASS</div>
 <div class="card"><b>Phase 4 - Integration</b><br>24 PASS</div>
 <div class="card"><b>Phase 5 - Release</b><br>16 PASS</div>
-<div class="card"><b>Phase 6 - UI</b><br>Step 2 - Interactive - YOU ARE HERE</div>
+<div class="card"><b>Phase 6 - UI</b><br>Step 3 - Playground - YOU ARE HERE</div>
 </div>
 <div class="card"><b>⚠️ Honest Limitations</b><br><span class="warn">NO REAL TTS / AdMob / Billing / Cloud</span><br>No APK yet - Dashboard only. No fake claims.</div>
 <div class="card"><b>Modules</b><br>security/ • core/ • systems_fj/ • integration/ • release/ • ui/</div>
@@ -37,14 +45,30 @@ a{color:#38bdf8}
 async function checkHealth(){
   document.getElementById('result').textContent='Checking health...';
   try{ const r=await fetch('/api/health'); const j=await r.json();
-    document.getElementById('result').textContent='HEALTH: '+j.overall+'\nOK: '+j.ok+'/'+j.total+'\nMissing: '+(j.missing_modules.length?j.missing_modules.join(', '):'None - All OK!'); }
+    document.getElementById('result').textContent='HEALTH: '+j.overall+'\nOK: '+j.ok+'/'+j.total+'\nMissing: '+(j.missing_modules.length?j.missing_modules.join(', '):'None'); }
   catch(e){ document.getElementById('result').textContent='Error: '+e; } }
 async function checkRegression(){
   document.getElementById('result').textContent='Running regression...';
   try{ const r=await fetch('/api/regression'); const j=await r.json();
-    document.getElementById('result').textContent='REGRESSION: '+j.overall+'\nPASS: '+j.passed+'/'+j.total+'\n'+j.checks.map(c=>c.name+': '+c.status).join('\n'); }
+    document.getElementById('result').textContent='REGRESSION: '+j.overall+'\nPASS: '+j.passed+'/'+j.total; }
   catch(e){ document.getElementById('result').textContent='Error: '+e; } }
-async function showModules(){
-  document.getElementById('result').textContent='Modules:\n- security/ (9 files)\n- core/ (10 modules)\n- systems_fj/ (10 modules)\n- integration/ (3 modules)\n- release/ (2 modules)\n- ui/ (Dashboard V2!)'; }
+async function showModules(){ document.getElementById('result').textContent='Modules:\n- security/\n- core/\n- systems_fj/\n- integration/\n- release/\n- ui/ (Playground V3!)'; }
+async function createStory(){
+  const title=document.getElementById('storyTitle').value||'Untitled';
+  document.getElementById('playResult').textContent='Creating story...';
+  try{ const r=await fetch('/api/story?title='+encodeURIComponent(title)); const j=await r.json();
+    document.getElementById('playResult').textContent='STORY CREATED!\nTitle: '+j.title+'\nID: '+j.story_id+'\nChapters: '+j.chapters; }
+  catch(e){ document.getElementById('playResult').textContent='Error: '+e; } }
+async function tryVoice(){
+  const v=document.getElementById('voiceName').value;
+  document.getElementById('playResult').textContent='Trying voice...';
+  try{ const r=await fetch('/api/voice?name='+encodeURIComponent(v)); const j=await r.json();
+    document.getElementById('playResult').textContent='VOICE: '+j.voice+'\nNote: '+j.note; }
+  catch(e){ document.getElementById('playResult').textContent='Error: '+e; } }
+async function buyItem(){
+  document.getElementById('playResult').textContent='Buying...';
+  try{ const r=await fetch('/api/market'); const j=await r.json();
+    document.getElementById('playResult').textContent='MARKETPLACE:\n'+j.message+'\nBalance: '+j.balance+' coins\nItems: '+j.items; }
+  catch(e){ document.getElementById('playResult').textContent='Error: '+e; } }
 </script>
 </body></html>
