@@ -1,5 +1,5 @@
 """
-Phase 7 Step 1 - AI Chat - Settings + Export + Ads Server
+Phase 7 Step 2 - Smart Search - Settings + Export + Ads Server
 - GET /api/health, /api/regression, /api/story, /api/voice, /api/market, /api/analytics, /api/ads, /api/export
 - Localhost only, NO internet, NO APK, NO real AdMob
 """
@@ -55,6 +55,73 @@ def get_chat(msg="Hello"):
         return {"reply": reply, "model": model_name, "score": score.get("score", 0), "tokens": _CHAT_CTX.total_tokens() if hasattr(_CHAT_CTX, "total_tokens") else len(msg)//4, "note": "Rule-based demo - NOT real LLM, NOT OpenAI"}
     except Exception as ex:
         return {"error": str(ex), "note": "Rule-based demo"}
+
+
+_SEARCH_INDEX = None
+def get_search(q="story"):
+    global _SEARCH_INDEX
+    try:
+        from core.feature_registry import FeatureRegistry
+        from systems_fj.marketplace import Marketplace
+        if _SEARCH_INDEX is None:
+            reg = FeatureRegistry()
+            feats = [
+                ("F-001", "AES Encryption", "security", "security.encryption"),
+                ("F-002", "Argon2 Auth", "security", "security.auth"),
+                ("F-003", "TOTP MFA", "security", "security.mfa"),
+                ("F-004", "Vault", "security", "security.vault"),
+                ("F-005", "Story Engine", "story", "systems_fj.story_engine"),
+                ("F-006", "Voice Engine", "voice", "systems_fj.voice_engine"),
+                ("F-007", "Marketplace", "market", "systems_fj.marketplace"),
+                ("F-008", "Ads Engine", "ads", "systems_fj.ads_engine"),
+                ("F-009", "Analytics", "analytics", "systems_fj.analytics"),
+                ("F-010", "AI Chat", "chat", "ui.server"),
+                ("F-011", "Smart Search", "search", "ui.server"),
+                ("F-012", "Creator Hub", "creator", "systems_fj.creator_hub"),
+            ]
+            for fid, name, cat, mod in feats:
+                try: reg.register(fid, name, cat, mod)
+                except Exception: pass
+            mk = Marketplace()
+            for iid, title, price, seller, cat in [
+                ("M-001", "Tamil Story Pack", 50, "Krish", "story"),
+                ("M-002", "Aria Voice Pack", 30, "Krish", "voice-pack"),
+                ("M-003", "Neon Theme", 20, "Krish", "theme"),
+                ("M-004", "Chat Sticker Pack", 10, "Krish", "sticker"),
+            ]:
+                try: mk.list_item(iid, title, price, seller, cat)
+                except Exception: pass
+            _SEARCH_INDEX = (reg, mk, feats)
+        reg, mk, feats = _SEARCH_INDEX
+        qlow = (q or "").lower().strip()
+        if len(qlow) == 0:
+            return {"results": [], "note": "Empty query - type something!"}
+        results = []
+        # Search features - keyword overlap scoring
+        for fid, name, cat, mod in feats:
+            hay = f"{name} {cat} {mod}".lower()
+            score = sum(1 for w in qlow.split() if w in hay) * 50
+            if qlow in hay:
+                score += 30
+            if score > 0:
+                results.append({"type": "FEATURE", "title": f"{fid} - {name}", "desc": f"Category: {cat} | Module: {mod}", "score": score})
+        # Search marketplace items
+        try:
+            items = mk._items if hasattr(mk, "_items") else {}
+            for iid, it in items.items():
+                hay = f"{it.get('title','')} {it.get('category','')}".lower()
+                score = sum(1 for w in qlow.split() if w in hay) * 50
+                if qlow in hay:
+                    score += 30
+                if score > 0:
+                    results.append({"type": "MARKET", "title": f"{iid} - {it.get('title')}", "desc": f"Price: {it.get('price_coins')} coins | Category: {it.get('category')}", "score": score})
+        except Exception:
+            pass
+        # Sort by score desc
+        results.sort(key=lambda x: x["score"], reverse=True)
+        return {"results": results[:10], "note": "Keyword search - NOT vector / NOT ML, real Registry + Marketplace data"}
+    except Exception as ex:
+        return {"results": [], "error": str(ex), "note": "Keyword search"}
 
 def get_analytics(track=False):
     global _ANALYTICS
@@ -123,7 +190,7 @@ def get_ads(action="show"):
 def get_export():
     try:
         h = get_health()
-        return {"version": "BH-OMNI-CORE v0.6.0 - Phase 7 Step 1 - AI Chat", "total_pass": 214, "health": h.get("overall", "UNKNOWN"), "health_ok": h.get("ok", 0), "modules": 16, "note": "Summary only - NO secrets, NO vault_data, NO PII."}
+        return {"version": "BH-OMNI-CORE v0.6.0 - Phase 7 Step 2 - Smart Search", "total_pass": 214, "health": h.get("overall", "UNKNOWN"), "health_ok": h.get("ok", 0), "modules": 16, "note": "Summary only - NO secrets, NO vault_data, NO PII."}
     except Exception as ex:
         return {"error": str(ex)}
 class H(SimpleHTTPRequestHandler):
@@ -168,14 +235,18 @@ class H(SimpleHTTPRequestHandler):
             msg = parse_qs(urlparse(self.path).query).get("msg", ["Hello"])[0]
             self.send_json(get_chat(msg))
             return
+        if self.path.startswith("/api/search"):
+            q = parse_qs(urlparse(self.path).query).get("q", ["story"])[0]
+            self.send_json(get_search(q))
+            return
         if self.path.startswith("/api/export"):
             self.send_json(get_export())
             return
         return super().do_GET()
 def start_server(port=8000):
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)
-    print(f"BH-OMNI Dashboard V7 - PHASE 7 AI CHAT: http://127.0.0.1:{port}/dashboard.html")
-    print("API: health + regression + story + voice + market + analytics + ads + export + chat")
+    print(f"BH-OMNI Dashboard V8 - PHASE 7 SMART SEARCH: http://127.0.0.1:{port}/dashboard.html")
+    print("API: health + regression + story + voice + market + analytics + ads + export + chat + search")
     print("Press Ctrl+C to stop")
     srv.serve_forever()
 if __name__ == "__main__":

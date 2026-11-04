@@ -18,8 +18,8 @@ body.neon{background:#000;color:#00ff88} body.neon .card{background:#111;color:#
 </style></head>
 <body>
 <h1>🌌 BH-OMNI CORE</h1>
-<p>Modular AI Ecosystem - Built on Phone - <b>Phase 7 - AI Chat V7!</b></p>
-<div class="card"><div class="big">230 PASS, 0 FAIL</div><span class="badge">ALL PHASES DONE</span></div>
+<p>Modular AI Ecosystem - Built on Phone - <b>Phase 7 - Smart Search V8!</b></p>
+<div class="card"><div class="big">238 PASS, 0 FAIL</div><span class="badge">ALL PHASES DONE</span></div>
 <div class="card"><b>🔴 LIVE CHECK</b><br><br>
 <button onclick="checkHealth()">🏥 Health Check</button>
 <button onclick="checkRegression()">🧪 Run Regression</button>
@@ -77,6 +77,27 @@ async function sendChat(){
   }catch(e){ h.textContent += '\nError: '+e; } }
 function clearChat(){ document.getElementById('chatHistory').textContent='Chat cleared! Puthu message anupu!'; }
 </script>
+
+<div class="card"><b>🔍 SMART SEARCH - Phase 7 Step 2!</b><br><br>
+<input id="searchInput" value="story" style="width:65%" onkeydown="if(event.key==='Enter')doSearch()">
+<button onclick="doSearch()">Search</button>
+<button onclick="document.getElementById('searchResults').textContent='Search results inge varum!'">Clear</button><br><br>
+<div id="searchResults" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;font-family:monospace;font-size:13px;white-space:pre-wrap">Search results inge varum! Try: story / voice / chat / ads / vault</div></div>
+<script>
+async function doSearch(){
+  const q=document.getElementById('searchInput').value.trim();
+  if(!q) return;
+  const box=document.getElementById('searchResults');
+  box.textContent='Searching for "'+q+'" ...';
+  try{ const r=await fetch('/api/search?q='+encodeURIComponent(q)); const j=await r.json();
+    if(j.results && j.results.length>0){
+      let out='Found '+j.results.length+' result(s) for "'+q+'":\n\n';
+      j.results.forEach((x,i)=>{ out += (i+1)+'. ['+x.type+'] '+x.title+' - '+x.desc+' (Score: '+x.score+')\n'; });
+      out += '\nNote: '+j.note;
+      box.textContent=out;
+    } else { box.textContent='No results for "'+q+'". Try: story / voice / chat / ads / vault / analytics'; }
+  }catch(e){ box.textContent='Error: '+e; } }
+</script>
 <div class="card"><b>📤 EXPORT</b><br><br>
 <button onclick="exportData()">Export My Data (JSON)</button>
 <div id="exportResult">Export = summary only, NO secrets, NO vault!</div>
@@ -87,7 +108,7 @@ function clearChat(){ document.getElementById('chatHistory').textContent='Chat c
 <div class="card"><b>Phase 3 - F-J Systems</b><br>40 PASS</div>
 <div class="card"><b>Phase 4 - Integration</b><br>24 PASS</div>
 <div class="card"><b>Phase 5 - Release</b><br>16 PASS</div>
-<div class="card"><b>Phase 6 - UI</b><br>Step 1 - AI Chat - YOU ARE HERE</div>
+<div class="card"><b>Phase 6 - UI</b><br>Step 2 - Smart Search - YOU ARE HERE</div>
 </div>
 <div class="card"><b>⚠️ Honest Limitations</b><br><span class="warn">NO REAL TTS / AdMob / Billing / Cloud</span><br>No APK yet - Dashboard only. No fake claims. Ads = local simulation.</div>
 <div class="card"><b>Modules</b><br>security/ • core/ • systems_fj/ • integration/ • release/ • ui/</div>
