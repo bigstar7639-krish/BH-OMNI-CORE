@@ -223,6 +223,15 @@ def get_omni_memory(msg="memory"):
         return {"reply": f"Memory error: {ex}"}
 
 
+def get_omni_flash(msg="flashcards"):
+    try:
+        from omni_flash import handle_flash
+        r = handle_flash(msg)
+        if r is None:
+            r = "Flashcard illa da! 'flash add Q | A' nu add pannu!"
+        return {"reply": r, "source": "omni_flash.py - SAME PROJECT"}
+    except Exception as e:
+        return {"reply": f"Flash error: {e}", "source": "omni_flash.py"}
 def get_omni_mood(msg="moods"):
     try:
         from omni_mood import handle_mood
@@ -388,6 +397,9 @@ class H(SimpleHTTPRequestHandler):
             msg = parse_qs(urlparse(self.path).query).get("msg", ["memory"])[0]
             self.send_json(get_omni_memory(msg))
             return
+        if self.path.startswith("/api/omni_flash"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "flashcards"
+            self.send_json(get_omni_flash(msg))
         if self.path.startswith("/api/omni_mood"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "moods"
             self.send_json(get_omni_mood(msg))

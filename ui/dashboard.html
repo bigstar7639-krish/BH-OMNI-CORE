@@ -173,6 +173,20 @@ async function sendMem(){
     h.textContent += '\nOMNI MEMORY: '+j.reply; h.scrollTop=h.scrollHeight;
   }catch(e){ h.textContent += '\nError: '+e; } }
 </script>
+<div class="card"><b>📚 OMNI FLASHCARDS - Phase 11 Step 2!</b><br><br>
+<div id="flashHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Flashcards Ready!</div><br>
+<input id="flashInput" value="flashcards" style="width:65%" onkeydown="if(event.key==='Enter')sendFlash()">
+<button onclick="sendFlash()">Send Flash</button>
+<script>
+async function sendFlash(){
+  let msg=document.getElementById('flashInput').value;
+  let h=document.getElementById('flashHistory');
+  h.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_flash?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  h.textContent+='\nFLASH: '+j.reply; h.scrollTop=h.scrollHeight;
+}
+</script></div>
 <div class="card"><b>💛 OMNI MOOD JOURNAL - Phase 10 Step 2! (Estimate only)</b><br><br>
 <div id="moodHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Mood Journal Ready!</div><br>
 <input id="moodInput" value="moods" style="width:65%" onkeydown="if(event.key==='Enter')sendMood()">
