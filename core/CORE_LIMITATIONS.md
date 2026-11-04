@@ -8,7 +8,8 @@
   4. No production claim without real assessment
   5. Preserve mod_01-mod_32 - This core does NOT modify them, only orders them
 
-## Step 4 - Router + Context
-- Router: Capability match + lowest cost, explicit fallback only
-- Context: Token estimate len//4 (approx, not real tokenizer), keep system, trim oldest
-- Limitations: In-memory only, no real tokenizer, no summarization (future), no persistent context
+## Step 5 - Offline + Eval - PHASE 2 COMPLETE
+- Offline: Queue when offline, replay when online, no silent loss
+- Eval: Rule-based 0-100, NOT human eval, NOT LLM-as-judge
+- Limitations: In-memory queue, no persistent queue, eval is heuristic only
+- PHASE 2 COMPLETE after this step - 5/5 steps!
