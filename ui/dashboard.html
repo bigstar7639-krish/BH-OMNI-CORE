@@ -173,6 +173,20 @@ async function sendMem(){
     h.textContent += '\nOMNI MEMORY: '+j.reply; h.scrollTop=h.scrollHeight;
   }catch(e){ h.textContent += '\nError: '+e; } }
 </script>
+<div class="card"><b>✈️ OMNI TRAVEL PLANNER - Phase 15 Step 2!</b><br><br>
+<div id="travelHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Travel Planner Ready!</div><br>
+<input id="travelInput" value="trips" style="width:65%" onkeydown="if(event.key==='Enter')sendTravel()">
+<button onclick="sendTravel()">Send Travel</button>
+<script>
+async function sendTravel(){
+  let msg=document.getElementById('travelInput').value;
+  let h=document.getElementById('travelHistory');
+  h.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_travel?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  h.textContent+='\nTRAVEL: '+j.reply; h.scrollTop=h.scrollHeight;
+}
+</script></div>
 <div class="card"><b>🎂 OMNI BIRTHDAY REMINDER - Phase 14 Step 2!</b><br><br>
 <div id="bdayHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Birthday Reminder Ready!</div><br>
 <input id="bdayInput" value="birthdays" style="width:65%" onkeydown="if(event.key==='Enter')sendBday()">

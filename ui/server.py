@@ -223,6 +223,15 @@ def get_omni_memory(msg="memory"):
         return {"reply": f"Memory error: {ex}"}
 
 
+def get_omni_travel(msg="trips"):
+    try:
+        from omni_travel import handle_travel
+        r = handle_travel(msg)
+        if r is None:
+            r = "Trip illa da! 'trip add Chennai | 10-12' nu add pannu!"
+        return {"reply": r, "source": "omni_travel.py - SAME PROJECT"}
+    except Exception as e:
+        return {"reply": f"Travel error: {e}", "source": "omni_travel.py"}
 def get_omni_birthday(msg="birthdays"):
     try:
         from omni_birthday import handle_birthday
@@ -424,6 +433,9 @@ class H(SimpleHTTPRequestHandler):
             msg = parse_qs(urlparse(self.path).query).get("msg", ["memory"])[0]
             self.send_json(get_omni_memory(msg))
             return
+        if self.path.startswith("/api/omni_travel"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "trips"
+            self.send_json(get_omni_travel(msg))
         if self.path.startswith("/api/omni_birthday"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "birthdays"
             self.send_json(get_omni_birthday(msg))
