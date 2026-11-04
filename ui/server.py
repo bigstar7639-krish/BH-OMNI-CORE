@@ -232,6 +232,15 @@ def get_omni_briefing(msg="briefing"):
         return {"reply": r, "source": "omni_briefing.py - SAME PROJECT"}
     except Exception as e:
         return {"reply": f"Briefing error: {e}", "source": "omni_briefing.py"}
+def get_omni_mega(msg="mega"):
+    try:
+        from omni_mega_full import handle_mega
+        r = handle_mega(msg)
+        if r is None:
+            r = "Mega: 'mega' / 'mega joke' / 'mega kadhai' / 'mega quiz' nu try pannu da!"
+        return {"reply": r, "source": "omni_mega_full.py - FULL CONTENT"}
+    except Exception as e:
+        return {"reply": f"Mega error: {e}", "source": "omni_mega_full.py"}
 def get_omni_own_v4(msg="correct test | answer"):
     try:
         from omni_own_ai_auto import handle_auto
@@ -571,6 +580,9 @@ class H(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/omni_briefing"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "briefing"
             self.send_json(get_omni_briefing(msg))
+        if self.path.startswith("/api/omni_mega"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "mega"
+            self.send_json(get_omni_mega(msg))
         if self.path.startswith("/api/omni_own_v4"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "correct test | answer"
             self.send_json(get_omni_own_v4(msg))

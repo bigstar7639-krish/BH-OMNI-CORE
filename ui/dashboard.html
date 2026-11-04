@@ -165,6 +165,21 @@ async function sendOwnV4(){
   hh.textContent+='\nOWN AI v4: '+j.reply; hh.scrollTop=hh.scrollHeight;
 }
 </script></div>
+<div class="card"><b>🌟 OMNI MEGA FULL - Phase 36 Step 2! (Full Content)</b><br><br>
+<div id="megaHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Mega Ready!</div><br>
+<button onclick="sendMega('mega joke')">Mega Joke</button>
+<button onclick="sendMega('mega kadhai')">Mega Kadhai</button>
+<button onclick="sendMega('mega quiz')">Mega Quiz</button>
+<button onclick="sendMega('mega motivation')">Mega Motivation</button>
+<script>
+async function sendMega(msg){
+  let hh=document.getElementById('megaHistory');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_mega?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nMEGA: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
 <div class="omni-orb-wrap"><div class="omni-orb"></div><div class="omni-orb-label">BH-OMNI CORE - Aurora Orb - CSS Animation Only</div></div>
 <h1>🌌 BH-OMNI CORE</h1>
 <p>Modular AI Ecosystem - Built on Phone - <b>Phase 8 - OMNI INFINITY V12 - SAME PROJECT!</b></p>
