@@ -223,6 +223,15 @@ def get_omni_memory(msg="memory"):
         return {"reply": f"Memory error: {ex}"}
 
 
+def get_omni_expense(msg="expenses"):
+    try:
+        from omni_expense import handle_expense
+        r = handle_expense(msg)
+        if r is None:
+            r = "Expense illa da! 'expense add 100 lunch' nu add pannu!"
+        return {"reply": r, "source": "omni_expense.py - SAME PROJECT"}
+    except Exception as e:
+        return {"reply": f"Expense error: {e}", "source": "omni_expense.py"}
 def get_omni_habit(msg="habits"):
     try:
         from omni_habit import handle_habit
@@ -370,6 +379,9 @@ class H(SimpleHTTPRequestHandler):
             msg = parse_qs(urlparse(self.path).query).get("msg", ["memory"])[0]
             self.send_json(get_omni_memory(msg))
             return
+        if self.path.startswith("/api/omni_expense"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "expenses"
+            self.send_json(get_omni_expense(msg))
         if self.path.startswith("/api/omni_habit"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "habits"
             self.send_json(get_omni_habit(msg))
