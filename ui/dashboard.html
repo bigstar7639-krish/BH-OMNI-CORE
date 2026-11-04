@@ -151,6 +151,20 @@ async function sendOwnV3(msg){
   hh.textContent+='\nOWN AI v3: '+j.reply; hh.scrollTop=hh.scrollHeight;
 }
 </script></div>
+<div class="card"><b>🧠 OWN AI v4 - Phase 33 Step 2! (Auto-Learn Correction)</b><br><br>
+<div id="ownV4History" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Own AI v4 Ready! Thappa sonna thiruthi kodu!</div><br>
+<input id="ownV4Input" value="correct en peru enna | Un peru Krish!" style="width:65%" onkeydown="if(event.key==='Enter')sendOwnV4()">
+<button onclick="sendOwnV4()">Correct Me</button>
+<script>
+async function sendOwnV4(){
+  let msg=document.getElementById('ownV4Input').value;
+  let hh=document.getElementById('ownV4History');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_own_v4?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nOWN AI v4: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
 <div class="omni-orb-wrap"><div class="omni-orb"></div><div class="omni-orb-label">BH-OMNI CORE - Aurora Orb - CSS Animation Only</div></div>
 <h1>🌌 BH-OMNI CORE</h1>
 <p>Modular AI Ecosystem - Built on Phone - <b>Phase 8 - OMNI INFINITY V12 - SAME PROJECT!</b></p>

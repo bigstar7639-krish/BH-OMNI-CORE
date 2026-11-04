@@ -232,6 +232,15 @@ def get_omni_briefing(msg="briefing"):
         return {"reply": r, "source": "omni_briefing.py - SAME PROJECT"}
     except Exception as e:
         return {"reply": f"Briefing error: {e}", "source": "omni_briefing.py"}
+def get_omni_own_v4(msg="correct test | answer"):
+    try:
+        from omni_own_ai_auto import handle_auto
+        r = handle_auto(msg)
+        if r is None:
+            r = "Own AI v4: 'correct Q | correct answer' nu try pannu da!"
+        return {"reply": r, "source": "omni_own_ai_auto.py - 100% OWN"}
+    except Exception as e:
+        return {"reply": f"Own AI v4 error: {e}", "source": "omni_own_ai_auto.py"}
 def get_omni_own_v3(msg="export brain"):
     try:
         from omni_own_ai_v3 import handle_own_v3
@@ -562,6 +571,9 @@ class H(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/omni_briefing"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "briefing"
             self.send_json(get_omni_briefing(msg))
+        if self.path.startswith("/api/omni_own_v4"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "correct test | answer"
+            self.send_json(get_omni_own_v4(msg))
         if self.path.startswith("/api/omni_own_v3"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "export brain"
             self.send_json(get_omni_own_v3(msg))
