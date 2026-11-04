@@ -53,6 +53,20 @@ async function sendBackup(){
   hh.textContent='BACKUP: '+j.reply; hh.scrollTop=hh.scrollHeight;
 }
 </script></div>
+<div class="card"><b>🌦️ LIVE WEATHER - Phase 26 Step 2! (wttr.in FREE)</b><br><br>
+<div id="liveWeatherHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">Live Weather Ready!</div><br>
+<input id="liveWeatherInput" value="live weather Chennai" style="width:65%" onkeydown="if(event.key==='Enter')sendLiveWeather()">
+<button onclick="sendLiveWeather()">Live Weather</button>
+<script>
+async function sendLiveWeather(){
+  let msg=document.getElementById('liveWeatherInput').value;
+  let hh=document.getElementById('liveWeatherHistory');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_weather_live?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nLIVE: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
 <div class="omni-orb-wrap"><div class="omni-orb"></div><div class="omni-orb-label">BH-OMNI CORE - Aurora Orb - CSS Animation Only</div></div>
 <h1>🌌 BH-OMNI CORE</h1>
 <p>Modular AI Ecosystem - Built on Phone - <b>Phase 8 - OMNI INFINITY V12 - SAME PROJECT!</b></p>
