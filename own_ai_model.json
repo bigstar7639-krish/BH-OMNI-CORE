@@ -1,9 +1,9 @@
 {
   "words": {
-    "test": 16,
+    "test": 18,
     "vanakkam": 4,
     "v2": 3,
-    "q": 10,
+    "q": 12,
     "eppadi": 1,
     "irukka": 1,
     "unakku": 3,
@@ -65,7 +65,7 @@
     "school": 1,
     "auto": 6,
     "q2": 3,
-    "final": 4
+    "final": 6
   },
   "replies": {
     "test vanakkam": "Test Vanakkam Krish!",
@@ -123,5 +123,5 @@
     "auto test q2": "auto a2",
     "final test q": "final corrected a"
   },
-  "count": 61
+  "count": 63
 }
