@@ -81,6 +81,20 @@ async function sendTransLive(){
   hh.textContent+='\nTRANS: '+j.reply; hh.scrollTop=hh.scrollHeight;
 }
 </script></div>
+<div class="card"><b>🔊 OMNI TTS - Phase 28 Step 2! (termux-tts FREE)</b><br><br>
+<div id="ttsHistory" style="background:#020617;border-radius:10px;padding:12px;min-height:60px;max-height:180px;overflow-y:auto;font-family:monospace;font-size:13px;white-space:pre-wrap">TTS Ready! Phone-la mattum kural varum.</div><br>
+<input id="ttsInput" value="speak Vanakkam Krish" style="width:65%" onkeydown="if(event.key==='Enter')sendTTS()">
+<button onclick="sendTTS()">Speak</button>
+<script>
+async function sendTTS(){
+  let msg=document.getElementById('ttsInput').value;
+  let hh=document.getElementById('ttsHistory');
+  hh.textContent+='\n\nNEE: '+msg;
+  let r=await fetch('/api/omni_tts?msg='+encodeURIComponent(msg));
+  let j=await r.json();
+  hh.textContent+='\nTTS: '+j.reply; hh.scrollTop=hh.scrollHeight;
+}
+</script></div>
 <div class="omni-orb-wrap"><div class="omni-orb"></div><div class="omni-orb-label">BH-OMNI CORE - Aurora Orb - CSS Animation Only</div></div>
 <h1>🌌 BH-OMNI CORE</h1>
 <p>Modular AI Ecosystem - Built on Phone - <b>Phase 8 - OMNI INFINITY V12 - SAME PROJECT!</b></p>

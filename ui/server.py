@@ -232,6 +232,15 @@ def get_omni_briefing(msg="briefing"):
         return {"reply": r, "source": "omni_briefing.py - SAME PROJECT"}
     except Exception as e:
         return {"reply": f"Briefing error: {e}", "source": "omni_briefing.py"}
+def get_omni_tts(msg="speak Vanakkam"):
+    try:
+        from omni_tts import handle_tts
+        r = handle_tts(msg)
+        if r is None:
+            r = "TTS: 'speak Vanakkam' nu try pannu da!"
+        return {"reply": r, "source": "omni_tts.py - termux-tts FREE"}
+    except Exception as e:
+        return {"reply": f"TTS error: {e}", "source": "omni_tts.py"}
 def get_omni_translate_live(msg="translate live hello"):
     try:
         from omni_translate_live import handle_translate_live
@@ -526,6 +535,9 @@ class H(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/omni_briefing"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "briefing"
             self.send_json(get_omni_briefing(msg))
+        if self.path.startswith("/api/omni_tts"):
+            msg = self.path.split("msg=")[-1] if "msg=" in self.path else "speak Vanakkam"
+            self.send_json(get_omni_tts(msg))
         if self.path.startswith("/api/omni_translate_live"):
             msg = self.path.split("msg=")[-1] if "msg=" in self.path else "translate live hello"
             self.send_json(get_omni_translate_live(msg))
