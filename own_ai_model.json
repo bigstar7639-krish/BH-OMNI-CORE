@@ -1,10 +1,12 @@
 {
   "words": {
-    "test": 3,
-    "vanakkam": 3
+    "test": 5,
+    "vanakkam": 3,
+    "v2": 2,
+    "q": 2
   },
   "replies": {
     "test vanakkam": "Test Vanakkam Krish!"
   },
-  "count": 3
+  "count": 1
 }
